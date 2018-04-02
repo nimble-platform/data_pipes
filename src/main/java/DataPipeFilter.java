@@ -39,6 +39,7 @@ public class DataPipeFilter implements Predicate<String, String> {
             return false;
         }
 
+        logger.info("The message is complying to the rules - sending to filtered");
         return true;
     }
 }

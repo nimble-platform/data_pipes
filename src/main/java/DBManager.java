@@ -91,7 +91,7 @@ public class DBManager {
     }
 
     private void createTableIfMissing(DatabaseMetaData dbm, String tableName, String createTableQuery) throws SQLException {
-        logger.info("Verifying table with name - " + tableName + " exists");
+//        logger.info("Verifying table with name - " + tableName + " exists");
         ResultSet tables = dbm.getTables(null, null, tableName, null);
 
         if (!tables.next()) {

@@ -59,9 +59,8 @@ public class Main {
             } else if (ns.getBoolean("create_data_pipe_db")) {
                 DBManager dbManager = new DBManager(TABLE_NAME);
                 String dataJson = createNewDataJson();
-                System.out.println(dataJson);
                 UUID uuid = dbManager.addNewDataPipeFilter(dataJson);
-                System.out.println(uuid);
+                System.out.print(uuid);
             } else if (ns.getBoolean("start_streams")) {
                 String uuid = ns.getString("uuid");
                 if (uuid == null) {
@@ -82,13 +81,6 @@ public class Main {
 
                 stream.filter(filter).to(FILTERED_TOPIC);
                 stream.filter(new InvertDataPipeFilter(filter)).to(NON_FILTERED_TOPIC);
-
-//                builder.<String, String>stream(INPUT_TOPIC)
-//                        .filter(filter)
-//                        .to(FILTERED_TOPIC);
-
-                // Sending the rest to the non filtered topic
-//                builder.<String, String>stream(INPUT_TOPIC).filterNot(filter).to(NON_FILTERED_TOPIC);
 
                 final Topology topology = builder.build();
                 Properties props = getProperties("streams.properties");
@@ -119,7 +111,7 @@ public class Main {
         long current = System.currentTimeMillis();
         long currentPlusTwoDays = current + 1000 * 60 * 60 * 24; // 86,400,000
 
-        String machineId = String.format("machine_id_%d", (new Random()).nextInt(4));
+        String machineId = getRandomMachineId();
         String[] targets = {"user_test@provernis.com"};
 
         JsonObject jsonObject = new JsonObject();
