@@ -1,5 +1,4 @@
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.Gson;
 import org.apache.kafka.streams.kstream.Predicate;
 import org.apache.log4j.Logger;
 
@@ -20,16 +19,20 @@ public class DataPipeFilter implements Predicate<String, String> {
         this.machineId = machineId;
     }
 
+    public DataPipeFilter(FilterConfigurations fc) {
+        this(fc.getFrom(), fc.getTo(), fc.getMachineId());
+    }
+
     @Override
     public boolean test(String key, String value) {
-        JsonObject jsonObject = (JsonObject) (new JsonParser()).parse(value);
+        ProducedData data = (new Gson()).fromJson(value, ProducedData.class);
 
-        String source = jsonObject.get("source").getAsString();
-        if (!source.equals(machineId)) {
-            logger.info(String.format("The data was received from %s and not from requested %s", source, machineId));
+        String sourceMachineId = data.getMachineId();
+        if (!sourceMachineId.equals(this.machineId)) {
+            logger.info(String.format("The data was received from %s and not from requested %s", sourceMachineId, this.machineId));
             return false;
         }
-        long time = jsonObject.get("time").getAsLong();
+        long time = data.getTime();
         if (time > to) {
             logger.info("The received data has timestamp bigger then allowed");
             return false;

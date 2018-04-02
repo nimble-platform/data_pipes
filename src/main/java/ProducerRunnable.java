@@ -24,6 +24,7 @@
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -41,11 +42,13 @@ public class ProducerRunnable implements Runnable {
 
     private final KafkaProducer<String, String> kafkaProducer;
     private final String topic;
+    private UUID filterId;
     private int producedMessages;
     private volatile boolean closing = false;
 
-    public ProducerRunnable(Properties producerProperties, String topic) throws IOException {
+    public ProducerRunnable(Properties producerProperties, String topic, UUID uuid) throws IOException {
         this.topic = topic;
+        filterId = uuid;
         Main.updateJaasConfiguration();
 
         // Create a Kafka producer with the provided client configuration
@@ -74,7 +77,7 @@ public class ProducerRunnable implements Runnable {
         try {
             while (!closing) {
                 String key = "key";
-                String message = Main.generateNewMessage();
+                String message = Main.generateNewData(filterId);
 
                 try {
                     // If a partition is not specified, the client will use the default partitioner to choose one.

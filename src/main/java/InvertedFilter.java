@@ -4,10 +4,10 @@ import org.apache.kafka.streams.kstream.Predicate;
  * Created by evgeniyh on 4/1/18.
  */
 
-public class InvertDataPipeFilter implements Predicate<String, String> {
-    private final DataPipeFilter filter;
+public class InvertedFilter implements Predicate<String, String> {
+    private final Predicate<String, String> filter;
 
-    public InvertDataPipeFilter(DataPipeFilter filter) {
+    public InvertedFilter(Predicate<String, String> filter) {
         this.filter = filter;
     }
 

@@ -1,8 +1,6 @@
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -36,7 +34,7 @@ import java.util.stream.Collectors;
 public class Main {
     private static final String JAAS_CONFIG_PROPERTY = "java.security.auth.login.config";
 
-    private static String TABLE_NAME = "data_pipes_demo";
+    static String TABLE_NAME = "data_pipes_demo";
 
     private static String INPUT_TOPIC = "streams-input";
 
@@ -62,25 +60,23 @@ public class Main {
                 UUID uuid = dbManager.addNewDataPipeFilter(dataJson);
                 System.out.print(uuid);
             } else if (ns.getBoolean("start_streams")) {
-                String uuid = ns.getString("uuid");
-                if (uuid == null) {
-                    throw new IllegalArgumentException("Missing the uuid argument for starting the streams");
-                }
+
                 updateJaasConfiguration();
 
-                String json = (new DBManager(TABLE_NAME)).getDataPipeJson(UUID.fromString(uuid));
-                JsonObject jsonObject = (JsonObject) new JsonParser().parse(json);
+//                String json = (new DBManager(TABLE_NAME)).getDataPipeJson(UUID.fromString(uuid));
+//                JsonObject jsonObject = (JsonObject) new JsonParser().parse(json);
 
-                DataPipeFilter filter = new DataPipeFilter(
-                        jsonObject.get("from").getAsLong(),
-                        jsonObject.get("to").getAsLong(),
-                        jsonObject.get("machineId").getAsString());
+//                DataPipeFilter filter = new DataPipeFilter(
+//                        jsonObject.get("from").getAsLong(),
+//                        jsonObject.get("to").getAsLong(),
+//                        jsonObject.get("machineId").getAsString());
 
                 final StreamsBuilder builder = new StreamsBuilder();
                 KStream<String, String> stream = builder.stream(INPUT_TOPIC);
 
-                stream.filter(filter).to(FILTERED_TOPIC);
-                stream.filter(new InvertDataPipeFilter(filter)).to(NON_FILTERED_TOPIC);
+                FiltersManager fm = new FiltersManager();
+                stream.filter(fm).to(FILTERED_TOPIC);
+                stream.filter(new InvertedFilter(fm)).to(NON_FILTERED_TOPIC);
 
                 final Topology topology = builder.build();
                 Properties props = getProperties("streams.properties");
@@ -93,8 +89,12 @@ public class Main {
                 streams.start();
                 latch.await();
             } else if (ns.getBoolean("start_producer")) {
+                String uuid = ns.getString("uuid");
+                if (uuid == null) {
+                    throw new IllegalArgumentException("Missing the uuid argument for the producer");
+                }
                 Properties producerProperties = getProperties("producer.properties");
-                ProducerRunnable producerRunnable = new ProducerRunnable(producerProperties, INPUT_TOPIC);
+                ProducerRunnable producerRunnable = new ProducerRunnable(producerProperties, INPUT_TOPIC, UUID.fromString(uuid));
                 producerRunnable.run();
             }
         } catch (ArgumentParserException e) {
@@ -185,16 +185,18 @@ public class Main {
         }
     }
 
-    public static String generateNewMessage() {
-        JsonObject jsonObject = new JsonObject();
+    public static String generateNewData(UUID filterId) {
+//        JsonObject jsonObject = new JsonObject();
 
         String machineId = getRandomMachineId();
 
-        jsonObject.addProperty("source", machineId);
-        jsonObject.addProperty("time", System.currentTimeMillis());
-        jsonObject.addProperty("data", "This is random data from " + machineId);
+        ProducedData newData = new ProducedData(System.currentTimeMillis(), machineId, "This is random data from " + machineId, filterId);
 
-        return (new Gson()).toJson(jsonObject);
+//        jsonObject.addProperty("machineId", machineId);
+//        jsonObject.addProperty("time", System.currentTimeMillis());
+//        jsonObject.addProperty("data", "This is random data from " + machineId);
+
+        return (new Gson()).toJson(newData);
     }
 
     private static String getRandomMachineId() {
