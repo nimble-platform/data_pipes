@@ -26,8 +26,6 @@ function startNewTerminalWithProcess() {
     echo ${1}
     startWindow=$(( 20 + count * 340))
     let count+=1
-#    echo $count
-#    echo $startWindow
     gnome-terminal --geometry 240x16+50+${startWindow} -x bash -c "echo ${1} ; java -jar ${JAR_PATH} ${2}"
 }
 
@@ -49,10 +47,9 @@ PIPE_UID=`java -jar ${JAR_PATH} --create-data-pipe-db`
 
 echo "The created data pipe UID is $PIPE_UID"
 
-startNewTerminalWithProcess "Starting producer for sending data" "--start-producer"
+startNewTerminalWithProcess "Starting kafka streams" "--start-streams --uuid=$PIPE_UID"
 
 startNewTerminalWithProcess "Starting consumer - for filtered" "--start-consumer filtered"
 startNewTerminalWithProcess "Starting consumer - for non-filtered" "--start-consumer non-filtered"
 
-startNewTerminalWithProcess "Starting kafka streams" "--start-streams --uuid=$PIPE_UID"
-
+startNewTerminalWithProcess "Starting producer for sending data" "--start-producer"
