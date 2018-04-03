@@ -1,0 +1,55 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: data-pipes
+  name: data-pipes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-pipes
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  revisionHistoryLimit: 2
+  template:
+    metadata:
+      labels:
+        app: data-pipes
+    spec:
+      containers:
+      - image: nimbleplatform/data-pipes:IMAGE_TAG
+        imagePullPolicy: Always
+        name: data-pipes
+        env:
+        - name: MESSAGE_HUB_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              name: messagehub-credentials
+              key: credentials.json
+        - name: POSTGRES_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: url
+        - name: POSTGRES_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: password
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi

@@ -1,6 +1,7 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -12,6 +13,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,6 +34,8 @@ import java.util.stream.Collectors;
  */
 
 public class Main {
+    private static final Logger logger = Logger.getLogger(Main.class);
+
     private static final String JAAS_CONFIG_PROPERTY = "java.security.auth.login.config";
 
     static String TABLE_NAME = "data_pipes_demo";
@@ -161,10 +165,20 @@ public class Main {
 
 
     public static void updateJaasConfiguration() throws IOException {
-        String apiKey = System.getenv("MESSAGE_HUB_API_KEY");
+        String credentials = System.getenv("MESSAGE_HUB_CREDENTIALS");
+        System.out.println(credentials);
+        if (credentials == null) {
+            logger.error("Failed to get message hub credentials - exiting");
+            System.exit(1);
+        }
+        JsonObject jsonObject = (JsonObject) (new JsonParser().parse(credentials));
+        String apiKey  = jsonObject.get("api_key").getAsString();
 
         if (apiKey == null || apiKey.isEmpty()) {
-            throw new IllegalArgumentException("Api key is missing from environment");
+            logger.error("Failed to initialise api key");
+            throw new RuntimeException("Unable to set the topics handler");
+        } else {
+            logger.debug("Admin url and api-key were set successfully");
         }
 
         String username = apiKey.substring(0, 17);

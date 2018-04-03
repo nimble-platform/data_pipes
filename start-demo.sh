@@ -6,6 +6,9 @@ function compile() {
     if [ "$1" == "only-build" ] ; then
         echo "Only building the project"
         mvn clean compile assembly:single | grep "SUCCESS"
+
+        echo "Building docker image"
+        docker build . -t data-pipes
         exit 0
     fi
     if [ "$1" != "build" ] ; then
@@ -38,18 +41,19 @@ export POSTGRES_URL=''
 
 export JAR_PATH="target/data_pipes.jar"
 
-export MESSAGE_HUB_API_KEY=''
+export MESSAGE_HUB_CREDENTIALS=''
 
 echo "Starting new data pipe demo"
 echo "Creating new DB record for the data filtering"
 
-PIPE_UID=`java -jar ${JAR_PATH} --create-data-pipe-db`
+FILTER_ID=`java -jar ${JAR_PATH} --create-data-pipe-db`
+#FILTER_ID='30ff97d9-f040-4e76-8267-c9434e7bf2c1'
 
-echo "The created data pipe UID is $PIPE_UID"
+echo "The created filter UID is $FILTER_ID"
 
-startNewTerminalWithProcess "Starting kafka streams" "--start-streams --uuid=$PIPE_UID"
+startNewTerminalWithProcess "Starting kafka streams" "--start-streams"
 
 startNewTerminalWithProcess "Starting consumer - for filtered" "--start-consumer filtered"
 startNewTerminalWithProcess "Starting consumer - for non-filtered" "--start-consumer non-filtered"
 
-startNewTerminalWithProcess "Starting producer for sending data" "--start-producer"
+startNewTerminalWithProcess "Starting producer for sending data" "--start-producer --uuid=$FILTER_ID"
