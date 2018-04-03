@@ -21,7 +21,16 @@ public class FiltersManager implements Predicate<String, String> {
 
     @Override
     public boolean test(String s, String s2) {
-        ProducedData data = (new Gson()).fromJson(s2, ProducedData.class);
+        ProducedData data;
+
+        try {
+            // Reading messages that don't comply - throws parsing errors
+            data = (new Gson()).fromJson(s2, ProducedData.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Failed to parse the message - " + s2);
+            return false;
+        }
 
         UUID filterId = data.getFilterId();
         if (filterId == null) { // TODO: delete - for demo with the old data
