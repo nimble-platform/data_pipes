@@ -166,7 +166,6 @@ public class Main {
 
     public static void updateJaasConfiguration() throws IOException {
         String credentials = System.getenv("MESSAGE_HUB_CREDENTIALS");
-        System.out.println(credentials);
         if (credentials == null) {
             logger.error("Failed to get message hub credentials - exiting");
             System.exit(1);
