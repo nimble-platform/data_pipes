@@ -1,4 +1,4 @@
-/**
+package runnables; /**
  * Copyright 2015-2016 IBM
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,13 +21,9 @@
  * (c) Copyright IBM Corp. 2015-2016
  */
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import common.Helper;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -36,21 +32,26 @@ import org.apache.kafka.common.errors.TimeoutException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 
 public class ProducerRunnable implements Runnable {
     private static final Logger logger = Logger.getLogger(ProducerRunnable.class);
 
     private final KafkaProducer<String, String> kafkaProducer;
     private final String topic;
-    private UUID filterId;
+    private UUID channelId;
     private int producedMessages;
     private volatile boolean closing = false;
 
     public ProducerRunnable(Properties producerProperties, String topic, UUID uuid) throws IOException {
         this.topic = topic;
-        filterId = uuid;
-        Main.updateJaasConfiguration();
-
+        channelId = uuid;
         // Create a Kafka producer with the provided client configuration
         kafkaProducer = new KafkaProducer<>(producerProperties);
 
@@ -77,7 +78,7 @@ public class ProducerRunnable implements Runnable {
         try {
             while (!closing) {
                 String key = "key";
-                String message = Main.generateNewData(filterId);
+                String message = generateNewData(channelId);
 
                 try {
                     // If a partition is not specified, the client will use the default partitioner to choose one.
@@ -110,6 +111,19 @@ public class ProducerRunnable implements Runnable {
             kafkaProducer.close(5000, TimeUnit.MILLISECONDS);
             logger.log(Level.INFO, ProducerRunnable.class.toString() + " has shut down.");
         }
+    }
+
+
+    private String generateNewData(UUID channelId) {
+        String machineId = Helper.generateRandomMachineId();
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("machineId", machineId);
+        jsonObject.addProperty("channelId", channelId.toString());
+        jsonObject.addProperty("time", System.currentTimeMillis());
+        jsonObject.addProperty("data", "This is random data from " + machineId);
+
+        return (new Gson()).toJson(jsonObject);
     }
 
     public void shutdown() {

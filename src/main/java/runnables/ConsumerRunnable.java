@@ -1,4 +1,4 @@
-/**
+package runnables; /**
  * Copyright 2015-2016 IBM
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,7 @@
  * Licensed Materials - Property of IBM
  * (c) Copyright IBM Corp. 2015-2016
  */
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-
+import common.Helper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -31,17 +27,24 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+
 public class ConsumerRunnable implements Runnable {
     private static final Logger logger = Logger.getLogger(ConsumerRunnable.class);
 
     private final KafkaConsumer<String, String> kafkaConsumer;
     private volatile boolean closing = false;
 
-    public ConsumerRunnable(Properties consumerProperties, String topic) throws IOException {
+    public ConsumerRunnable(Properties consumerProperties, UUID channelId) throws IOException {
         // Create a Kafka consumer with the provided client configuration
-        Main.updateJaasConfiguration();
-        kafkaConsumer = new KafkaConsumer<>(consumerProperties);
+        String topic = Helper.generateOutputTopicName(channelId);
+        logger.info("Starting to consume on topic - " + topic);
 
+        kafkaConsumer = new KafkaConsumer<>(consumerProperties);
 
         // Checking for topic existence before subscribing
         List<PartitionInfo> partitions = kafkaConsumer.partitionsFor(topic);

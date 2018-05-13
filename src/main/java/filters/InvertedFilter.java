@@ -1,3 +1,5 @@
+package filters;
+
 import org.apache.kafka.streams.kstream.Predicate;
 
 /**

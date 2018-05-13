@@ -1,8 +1,8 @@
-FROM java:8
+FROM tomcat
 MAINTAINER evgeniyh@il.ibm.com
 
-WORKDIR /
-ADD target/data_pipes.jar data_pipes.jar
-EXPOSE 8080
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-CMD java -jar data_pipes.jar --start-streams
+ADD ./target/data_pipes.war /usr/local/tomcat/webapps/ROOT.war
+
+CMD ["catalina.sh", "run"]

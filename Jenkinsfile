@@ -4,14 +4,14 @@ node ('nimble-jenkins-slave') {
     }
 
     stage ('Build docker image') {
-        sh 'mvn clean compile assembly:single'
-        sh 'docker build -t nimbleplatform/data-pipes:${BUILD_NUMBER} .'
+        sh 'mvn clean install'
+        sh 'docker build -t nimbleplatform/data-channels:${BUILD_NUMBER} .'
         sh 'sleep 5' // For the tag to populate
     }
 
     stage ('Push docker image') {
         withDockerRegistry([credentialsId: 'NimbleDocker']) {
-            sh 'docker push nimbleplatform/data-pipes:${BUILD_NUMBER}'
+            sh 'docker push nimbleplatform/data-channels:${BUILD_NUMBER}'
         }
     }
 
@@ -23,6 +23,6 @@ node ('nimble-jenkins-slave') {
 
     stage ('Print-deploy logs') {
         sh 'sleep 60'
-        sh 'kubectl  -n prod logs deploy/data-pipes -c data-pipes'
+        sh 'kubectl -n prod logs deploy/data-channels -c data-channels'
     }
 }
