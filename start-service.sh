@@ -53,7 +53,7 @@ gnome-terminal --geometry 240x16+50+${startWindow} -x bash -c "docker run -it -p
 -e MESSAGE_HUB_CREDENTIALS='' \
 evgeniyh/data-channels | tee streams.log"
 
-SERVICE_PATH='localhost:1000'
+export SERVICE_PATH='localhost:1000'
 
 echo "Waiting for the service to be up"
 while [ `curl -s -o /dev/null -w "%{http_code}" ${SERVICE_PATH}/health-check` -ne 200 ] ; do
@@ -69,12 +69,39 @@ CREATE_URL="${SERVICE_PATH}/start-new?source=${SOURCE}&target=${TARGET}&filter=%
 echo "Sending create new channel id on ${CREATE_URL}"
 
 CHANNEL_ID=`curl -s -X POST ${CREATE_URL}`
-#CHANNEL_ID="2656e3bc-ab89-4518-8d25-8cbe279ba78d"
+#CHANNEL_ID="ad32f9a6-f403-47fa-b959-27ee71e00a5e"
 
 echo "The created channel id is ${CHANNEL_ID}"
 #curl -s -X POST ${SERVICE_PATH}/start-new/existing?c_id=${CHANNEL_ID}
 
 startNewTerminalWithProcess "Starting consumer for the channel output topic" "consumer --channelId ${CHANNEL_ID} | tee consumer.log"
 startNewTerminalWithProcess "Starting producer for the streams input topic"  "producer --channelId ${CHANNEL_ID} | tee producer.log"
+
+function printTargetsChannelsAndMessages() {
+    CHANNELS_RESULT=`curl -s ${SERVICE_PATH}/${1}/channels`
+    echo "The channels for ${1} are:"
+    echo ${CHANNELS_RESULT} | jq
+
+
+    MESSAGES_RESULT=`curl -s ${SERVICE_PATH}/${2}/messages`
+    echo "The messages for ${2} are:"
+    echo ${MESSAGES_RESULT} | jq
+}
+
+echo "Printing the initial state for target=${TARGET} and channel=${CHANNEL_ID}"
+printTargetsChannelsAndMessages ${TARGET} ${CHANNEL_ID}
+
+echo "Sleeping 15 sec"
+sleep 15
+
+echo "Printing state for target=${TARGET} and channel=${CHANNEL_ID}"
+printTargetsChannelsAndMessages ${TARGET} ${CHANNEL_ID}
+
+
+DELETE_RESULT=`curl -s -X DELETE ${SERVICE_PATH}/${CHANNEL_ID}`
+echo "Delete result is ${DELETE_RESULT}"
+
+echo "Printing state after DELETE for target=${TARGET} and channel=${CHANNEL_ID}"
+printTargetsChannelsAndMessages ${TARGET} ${CHANNEL_ID}
 
 #java -jar ${JAR_PATH} delete --tables
