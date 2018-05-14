@@ -66,7 +66,7 @@ public class ConsumerRunnable implements Runnable {
             while (!closing) {
                 try {
                     // Poll on the Kafka consumer, waiting up to 3 secs if there's nothing to consume.
-                    ConsumerRecords<String, String> records = kafkaConsumer.poll(3000);
+                    ConsumerRecords<String, String> records = kafkaConsumer.poll(4000);
 
                     if (records.isEmpty()) {
                         logger.info("No messages consumed");

@@ -3,6 +3,7 @@ package db;
 import common.Configurations;
 import org.apache.log4j.Logger;
 
+import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -17,7 +18,7 @@ import static common.Helper.isNullOrEmpty;
  * Created by evgeniyh on 4/1/18.
  */
 
-public class DBManager {
+public class DBManager implements Closeable{
     private static final Logger logger = Logger.getLogger(DBManager.class);
 
     private Connection connection;
@@ -109,6 +110,7 @@ public class DBManager {
         if (!silent) {
             logger.info(String.format("The update statement completed successfully and affected %d rows", affectedRows));
         }
+        ps.close();
     }
 
     public boolean reconnect() {
@@ -143,6 +145,49 @@ public class DBManager {
         executeUpdateStatement(ps, false);
 
         ps = connection.prepareStatement(qm.DELETE_CHANNELS_TABLE);
+        executeUpdateStatement(ps, false);
+    }
+
+    public ResultSet getChannelsForTarget(String target) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(qm.GET_CHANNELS);
+
+        ps.setObject(1, target);
+        logger.info("Executing query - " + ps);
+
+        return ps.executeQuery();
+    }
+
+    public ResultSet getDataForChannelId(UUID channelId) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(qm.GET_MESSAGES);
+
+        ps.setObject(1, channelId);
+        logger.info("Executing query - " + ps);
+
+        return ps.executeQuery();
+    }
+
+    @Override
+    public void close()  {
+        try {
+            logger.info("Closing db connection");
+            connection.close();
+        } catch (SQLException e) {
+            logger.error("Error during closing the db connection");
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteMessages(UUID channelUuid) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(qm.DELETE_CHANNEL);
+        ps.setObject(1, channelUuid);
+
+        executeUpdateStatement(ps, false);
+    }
+
+    public void deleteChannel(UUID channelUuid) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(qm.DELETE_MESSAGES);
+        ps.setObject(1, channelUuid);
+
         executeUpdateStatement(ps, false);
     }
 }

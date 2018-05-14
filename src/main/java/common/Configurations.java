@@ -1,5 +1,7 @@
 package common;
 
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsConfig;
 import org.apache.log4j.Logger;
 
 import java.util.Properties;
@@ -30,6 +32,7 @@ public class Configurations {
 
     public static Properties CONSUMER_PROPERTIES;
     public static Properties PRODUCER_PROPERTIES;
+    public static Properties STREAMS_PROPERTIES;
 
     public static String ENVIRONMENT;
 
@@ -60,7 +63,10 @@ public class Configurations {
             CONSUMER_PROPERTIES = Helper.loadPropertiesFromResource("consumer.properties");
             CONSUMER_PROPERTIES.put(Configurations.KAFKA_CLIENT_ID, Configurations.OUTPUT_TOPIC_CONSUMER_ID);
 
-
+            STREAMS_PROPERTIES = Helper.loadPropertiesFromResource("streams.properties");
+            STREAMS_PROPERTIES.put("application.id", STREAMS_APPLICATION_ID);
+            STREAMS_PROPERTIES.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+            STREAMS_PROPERTIES.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
 
             PRODUCER_PROPERTIES = Helper.loadPropertiesFromResource("producer.properties");
             Helper.updateJaasConfiguration();

@@ -11,6 +11,9 @@ import static common.Helper.isNullOrEmpty;
 public class QueriesManager {
     private static final Logger logger = Logger.getLogger(QueriesManager.class);
 
+    final String GET_CHANNELS;
+    final String GET_MESSAGES;
+
     final String CREATE_CHANNELS_TABLE;
     final String CREATE_DATA_TABLE;
 
@@ -18,16 +21,19 @@ public class QueriesManager {
     final String INSERT_INTO_DATA;
 
     final String GET_FILTER;
-    final String GET_DATA;
 
     final String DELETE_DATA_TABLE;
     final String DELETE_CHANNELS_TABLE;
+
+    final String DELETE_CHANNEL;
+    final String DELETE_MESSAGES;
+
 
     public QueriesManager(String channelsTableName, String dataTableName) {
         if (isNullOrEmpty(channelsTableName) || isNullOrEmpty(dataTableName)) {
             throw new NullPointerException("Table names can't be null or empty");
         }
-        logger.info(String.format("Channels table = '%s' , Data table = '%s'", channelsTableName, dataTableName));
+        logger.info(String.format("Channels table = '%s' , DataRequests table = '%s'", channelsTableName, dataTableName));
 
         CREATE_CHANNELS_TABLE = String.format(
                 "CREATE TABLE %s " +
@@ -48,10 +54,21 @@ public class QueriesManager {
         INSERT_INTO_DATA = String.format("INSERT INTO %s VALUES (?,?,?);", dataTableName);
 
         GET_FILTER = String.format("SELECT filter FROM %s WHERE c_id=?;", channelsTableName);
-        GET_DATA = String.format("SELECT data FROM %s WHERE c_id=?;", dataTableName);
 
         DELETE_DATA_TABLE = String.format("DROP TABLE %s ;", dataTableName);
         DELETE_CHANNELS_TABLE = String.format("DROP TABLE %s ;", channelsTableName);
+
+        GET_CHANNELS = String.format("SELECT c_id FROM %s WHERE target=? ;", channelsTableName);
+        GET_MESSAGES = String.format("SELECT data FROM %s WHERE c_id=? ;", dataTableName);
+
+        DELETE_CHANNEL = String.format("DELETE FROM %s WHERE c_id=? ;", channelsTableName);
+        DELETE_MESSAGES = String.format("DELETE FROM %s WHERE c_id=? ;", dataTableName);
+
+        logger.info("The delete channel query is - " + DELETE_CHANNEL);
+        logger.info("The delete messages query is - " + DELETE_MESSAGES);
+
+        logger.info("The get all channel ids for target query is - " + GET_CHANNELS);
+        logger.info("The get all message for channel id query is - " + GET_MESSAGES);
 
         logger.info("The delete channels table query is - " + DELETE_CHANNELS_TABLE);
         logger.info("The delete data table query is - " + DELETE_DATA_TABLE);
@@ -62,7 +79,6 @@ public class QueriesManager {
         logger.info("The insert into channels table query is - " + INSERT_INTO_CHANNELS);
         logger.info("The insert into data table query is - " + INSERT_INTO_DATA);
 
-        logger.info("The get filter query is - " + GET_FILTER);
-        logger.info("The get data query is - " + GET_DATA);
+        logger.info("The get filter for channel id query is - " + GET_FILTER);
     }
 }

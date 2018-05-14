@@ -11,19 +11,19 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.errors.WakeupException;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import rest.Main;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Properties;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,12 +38,23 @@ import static common.Helper.isNullOrEmpty;
 public class KafkaHandler {
     private static final Logger logger = Logger.getLogger(KafkaHandler.class);
 
+    private static ClosingRunnables closingRunnables = new ClosingRunnables();
+    private static Thread closingThread = new Thread(closingRunnables);
+
+    static {
+        Runtime.getRuntime().addShutdownHook(closingThread);
+    }
+
     public static void startKafkaStreams() {
-        startNewRunnable(new KafkaStreamsRunnable(), "Kafka Streams Runnable");
+        KafkaStreamsRunnable r = new KafkaStreamsRunnable();
+        closingRunnables.addCloseable(r);
+        startNewRunnable(r, "Kafka Streams Runnable");
     }
 
     public static void startDbLoggerKafkaConsumer() {
-        startNewRunnable(new DBLoggerKafkaConsumer(), "Kafka DB Logger Consumer");
+        DBLoggerKafkaConsumer consumer = new DBLoggerKafkaConsumer();
+        closingRunnables.addCloseable(consumer);
+        startNewRunnable(consumer, "Kafka DB Logger Consumer");
     }
 
     private static void startNewRunnable(Runnable runnable, String runnableName) {
@@ -57,7 +68,30 @@ public class KafkaHandler {
         }
     }
 
-    private static class DBLoggerKafkaConsumer implements Runnable {
+    private static class ClosingRunnables implements Runnable {
+        private List<Closeable> closeable = new ArrayList<>();
+
+        public void addCloseable(Closeable c) {
+            closeable.add(c);
+        }
+
+        @Override
+        public void run() {
+            for (Closeable c : closeable) {
+                String className = c.getClass().toString();
+                try {
+                    logger.info("Trying to close - " + className);
+                    c.close();
+                } catch (IOException e) {
+                    logger.error("Failed to close - " + className, e);
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+
+    private static class DBLoggerKafkaConsumer implements Runnable, Closeable {
         private final KafkaConsumer<String, String> kafkaConsumer;
         private final KafkaProducer<String, String> kafkaProducer;
 
@@ -79,18 +113,17 @@ public class KafkaHandler {
 
             while (true) {
                 try {
-                    ConsumerRecords<String, String> records = kafkaConsumer.poll(3000);
+                    ConsumerRecords<String, String> records = kafkaConsumer.poll(4000);
 
                     if (records.isEmpty()) {
-                        logger.info("No messages consumed - sleeping for 3 seconds");
+                        logger.info("No messages consumed - will retry again with 4 second timeout");
                         continue;
                     }
 
                     for (ConsumerRecord<String, String> record : records) {
-                        String message = record.value();
-                        logger.info("DELETE !!! - Message consumed: " + message);
-
                         try {
+                            String message = record.value();
+
                             JsonObject object = parser.parse(message).getAsJsonObject();
                             String idString = object.get(CHANNEL_ID_KEY).getAsString();
                             UUID channelId = UUID.fromString(idString);
@@ -148,37 +181,47 @@ public class KafkaHandler {
                 logger.error("Failed to the send the message to the DB - " + message, e);
             }
         }
+
+        @Override
+        public void close() {
+            logger.info("Closing producer and consumer");
+            try {
+                kafkaProducer.close();
+                kafkaConsumer.close();
+            } catch (Exception e) {
+                logger.error("Error during close of producer and consumer");
+            }
+        }
     }
 
-    private static class KafkaStreamsRunnable implements Runnable {
+    private static class KafkaStreamsRunnable implements Runnable, Closeable {
         private final FiltersManager fm = new FiltersManager();
+
+        private KafkaStreams streams;
 
         KafkaStreamsRunnable() {
             logger.info("Creating the DB Logger kafka consumer for the output topic");
+            final StreamsBuilder builder = new StreamsBuilder();
+            KStream<String, String> stream = builder.stream(Configurations.STREAMS_INPUT_TOPIC);
+
+            stream.filter(fm).to(Configurations.STREAMS_OUTPUT_TOPIC);
+
+            final Topology topology = builder.build();
+
+            streams = new KafkaStreams(topology, Configurations.STREAMS_PROPERTIES);
         }
 
         @Override
         public void run() {
             logger.info("Starting the DB Logger kafka consumer thread");
-            try {
-                final StreamsBuilder builder = new StreamsBuilder();
-                KStream<String, String> stream = builder.stream(Configurations.STREAMS_INPUT_TOPIC);
+            streams.start();
+        }
 
-                stream.filter(fm).to(Configurations.STREAMS_OUTPUT_TOPIC);
-
-                final Topology topology = builder.build();
-                Properties props = Helper.loadPropertiesFromResource("streams.properties");
-                props.put("application.id", Configurations.STREAMS_APPLICATION_ID);
-
-                props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-                props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-                final KafkaStreams streams = new KafkaStreams(topology, props);
-
-                streams.start();
-            } catch (IOException e) {
-                // TODO: maybe rebuild + restart the kafka streams
-                logger.error("Error during run of consumer thread", e);
-                e.printStackTrace();
+        @Override
+        public void close() throws IOException {
+            logger.info("Closing kafka streams");
+            if (streams != null) {
+                streams.close();
             }
         }
     }

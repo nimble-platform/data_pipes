@@ -95,7 +95,7 @@ public class ProducerRunnable implements Runnable {
                     logger.log(Level.INFO, String.format("Message sent #%d, offset=%s, message=%s", producedMessages, recordMetadata.offset(), record.value()));
 
                     // Short sleep for flow control in this sample app to make the output easily understandable
-                    Thread.sleep(2000);
+                    Thread.sleep(3000);
                 } catch (final InterruptedException e) {
                     logger.log(Level.WARN, "Producer closing - caught exception: " + e);
                 } catch (final Exception e) {

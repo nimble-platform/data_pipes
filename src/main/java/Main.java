@@ -61,7 +61,7 @@ public class Main {
 
 
     private static ArgumentParser getArgumentParser() {
-        ArgumentParser parser = ArgumentParsers.newFor("Data-Pipes CLI")
+        ArgumentParser parser = ArgumentParsers.newFor("Runnables CLI")
                 .build()
                 .defaultHelp(true)
                 .description("Command to run the streams demo");
