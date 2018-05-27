@@ -117,13 +117,20 @@ public class ProducerRunnable implements Runnable {
     private String generateNewData(UUID channelId) {
         String machineId = Helper.generateRandomMachineId();
 
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("machineId", machineId);
-        jsonObject.addProperty("channelId", channelId.toString());
-        jsonObject.addProperty("time", System.currentTimeMillis());
-        jsonObject.addProperty("data", "This is random data from " + machineId);
+        JsonObject header = new JsonObject();
+        header.addProperty("machineId", machineId);
+        header.addProperty("channelId", channelId.toString());
+        header.addProperty("time", System.currentTimeMillis());
+        header.addProperty("data", "This is random data from " + machineId);
 
-        return (new Gson()).toJson(jsonObject);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("data", "This is random data from " + machineId);
+
+        JsonObject message = new JsonObject();
+        message.add("header", header);
+        message.add("payload", payload);
+
+        return (new Gson()).toJson(message);
     }
 
     public void shutdown() {

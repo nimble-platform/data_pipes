@@ -1,8 +1,8 @@
 package rest;
 
 import common.Configurations;
-import common.KafkaHandler;
 import db.DBManager;
+import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
 
 import javax.inject.Singleton;
@@ -32,8 +32,11 @@ public class Main extends Application implements ServletContextListener {
     public static DBManager dbManager = createDBManager();
 
     public Main() {
-        KafkaHandler.startKafkaStreams();
-        KafkaHandler.startDbLoggerKafkaConsumer();
+        KafkaHelper helper = new KafkaHelper();
+        KafkaHelper.startKafkaStreams();
+        KafkaHelper.startDbLoggerKafkaConsumer();
+        KafkaHelper.createNewTopic(Configurations.STREAMS_OUTPUT_TOPIC);
+        KafkaHelper.createNewTopic(Configurations.STREAMS_INPUT_TOPIC);
     }
 
     @GET
@@ -44,7 +47,19 @@ public class Main extends Application implements ServletContextListener {
     @GET
     @Path("/health-check")
     public Response runHealthCheck() {
-        logger.info("Run test against the DB and message hub");
+        logger.info("TODO !!! Run test against the DB and message hub");
+//        Enumeration loggers = LogManager.getCurrentLoggers();
+//
+//        while(loggers.hasMoreElements()) {
+//            Category c = (Category) loggers.nextElement();
+//            System.out.println(c.getName());
+//            Enumeration appenders = c.getAllAppenders();
+//            while(appenders.hasMoreElements()) {
+//                Appender a = (Appender) appenders.nextElement();
+//                System.out.println(a.getName());
+//            }
+//        }
+//        System.exit(1);
         return createResponse(Status.OK, "OK");
     }
 
@@ -65,6 +80,7 @@ public class Main extends Application implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         logger.info("Destroyed");
+        dbManager.close();
     }
 
     private static DBManager createDBManager() {

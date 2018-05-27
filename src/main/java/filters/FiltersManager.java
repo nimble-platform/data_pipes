@@ -24,15 +24,18 @@ public class FiltersManager implements Predicate<String, String> {
 
     @Override
     public boolean test(String s, String s2) {
-        JsonObject object;
+        JsonObject header;
         try {
-            object = parser.parse(s2).getAsJsonObject();
+            JsonObject object = parser.parse(s2).getAsJsonObject();
+            header = object.getAsJsonObject("header");
+            if (header == null) {
+                throw new RuntimeException("Missing the header key from the message");
+            }
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Failed to parse the message into JSON - " + s2);
+            logger.error("Failed to parse the message into JSON - " + s2, e);
             return false;
         }
-        String idString = object.get(CHANNEL_ID_KEY).getAsString();
+        String idString = header.get(CHANNEL_ID_KEY).getAsString();
         if (idString == null) {
             logger.error("Failed to read channelId from the message - " + s2);
             return false;
@@ -51,10 +54,9 @@ public class FiltersManager implements Predicate<String, String> {
                 idToFilter.put(channelId, filter);
             } catch (Exception e) {
                 logger.error("Failed to load the filter id from DB - " + channelId, e);
-                e.printStackTrace();
                 return false;
             }
         }
-        return filter.test(object);
+        return filter.test(header);
     }
 }

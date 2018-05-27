@@ -13,6 +13,8 @@ import runnables.ProducerRunnable;
 
 import java.util.UUID;
 
+import static common.Configurations.MESSAGE_HUB_CREDENTIALS;
+
 /**
  * Created by evgeniyh on 3/29/18.
  */
@@ -30,7 +32,7 @@ public class Main {
             Namespace ns = parser.parseArgs(args);
             String commandName = ns.getString("command_name");
 
-            Helper.updateJaasConfiguration();
+            Helper.updateJaasConfiguration(MESSAGE_HUB_CREDENTIALS.getUser(), MESSAGE_HUB_CREDENTIALS.getPassword());
             if (commandName.equals(CONSUMER_COMMAND)) {
                 String channelIdString = ns.getString("channelId");
                 UUID channelId = UUID.fromString(channelIdString);

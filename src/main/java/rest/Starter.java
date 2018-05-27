@@ -1,7 +1,7 @@
 package rest;
 
 import common.Configurations;
-import common.Helper;
+import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.POST;
@@ -37,11 +37,12 @@ public class Starter {
         UUID channelId = UUID.randomUUID();
 
         String topicName = Configurations.OUTPUT_TOPIC_PREFIX + channelId;
-        String postUrl = String.format("%s%s", Configurations.CSB_CREATE_TOPIC_URL, topicName);
+//        String postUrl = String.format("%s%s", Configurations.CSB_CREATE_TOPIC_URL, topicName);
 
         try {
-            logger.info("Sending post command to CSB to create new topic on - " + postUrl);
-            Helper.executeHttpPost(postUrl, true, true);
+            logger.info("Sending post create to kafka admin to create topic - " + topicName);
+//            Helper.executeHttpPost(postUrl, true, true);
+            KafkaHelper.createNewTopic(topicName);
             logger.info("Post command successful - inserting new DB record"); // TODO: handle delete topic if command fails
 
             dbManager.addNewChannel(channelId, source, target, jsonFilter);
