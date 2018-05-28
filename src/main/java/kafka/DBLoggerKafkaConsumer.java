@@ -66,6 +66,9 @@ class DBLoggerKafkaConsumer implements Runnable, Closeable {
 
                         JsonObject object = parser.parse(message).getAsJsonObject();
                         JsonObject header = object.getAsJsonObject("header");
+                        if (header == null ) {
+                            throw new RuntimeException("The message doesn't contains the header object");
+                        }
                         String idString = header.get(CHANNEL_ID_KEY).getAsString();
                         UUID channelId = UUID.fromString(idString);
 
