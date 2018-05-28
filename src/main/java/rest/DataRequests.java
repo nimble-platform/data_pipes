@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import common.Helper;
+import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.DELETE;
@@ -78,7 +79,6 @@ public class DataRequests {
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Channel id can't be null or empty");
         }
         try {
-
             UUID channelUuid = UUID.fromString(channelId);
 
             logger.info("At channels table deleting channel with id - " + channelId);
@@ -86,6 +86,9 @@ public class DataRequests {
 
             logger.info("At data table deleting all the message for channel id - " + channelId);
             Main.dbManager.deleteMessages(channelUuid);
+
+            String topicToDelete = Helper.generateOutputTopicName(channelUuid);
+            KafkaHelper.deleteTopic(topicToDelete);
 
             return Helper.createResponse(Response.Status.OK, "Successfully deleted filter and messages for channel id - " + channelId);
         } catch (IllegalArgumentException e) {

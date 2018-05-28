@@ -32,7 +32,6 @@ public class Main extends Application implements ServletContextListener {
     public static DBManager dbManager = createDBManager();
 
     public Main() {
-        KafkaHelper helper = new KafkaHelper();
         KafkaHelper.startKafkaStreams();
         KafkaHelper.startDbLoggerKafkaConsumer();
         KafkaHelper.createNewTopic(Configurations.STREAMS_OUTPUT_TOPIC);
@@ -89,7 +88,7 @@ public class Main extends Application implements ServletContextListener {
         } catch (Exception e) {
             logger.error(e);
             e.printStackTrace();
-            throw new RuntimeException("Error during creationg of the db manager");
+            throw new RuntimeException("Error during the creation of the db manager");
         }
     }
 }

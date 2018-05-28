@@ -65,22 +65,23 @@ class DBLoggerKafkaConsumer implements Runnable, Closeable {
                         String message = record.value();
 
                         JsonObject object = parser.parse(message).getAsJsonObject();
-                        String idString = object.get(CHANNEL_ID_KEY).getAsString();
+                        JsonObject header = object.getAsJsonObject("header");
+                        if (header == null ) {
+                            throw new RuntimeException("The message doesn't contains the header object");
+                        }
+                        String idString = header.get(CHANNEL_ID_KEY).getAsString();
                         UUID channelId = UUID.fromString(idString);
 
                         if (isNullOrEmpty(idString)) {
                             throw new IllegalArgumentException("ERROR !!! Failed to read channelId from the message - " + message);
                         }
-                        trySendMessageToDb(channelId, message);
-                        String actualTopicName = Helper.generateOutputTopicName(channelId);
-                        //TODO: Create cache of existing topics - avoid call to create
+                        String targetTopic = Helper.generateOutputTopicName(channelId);
 
-                        sendMessageToActualTopic(actualTopicName, message);
+                        sendMessageToDb(channelId, message);
+                        sendMessageToActualTopic(targetTopic, message);
                     } catch (Exception e) {
                         logger.error("Error during parsing message, sending message to topic or DB", e);
                     }
-
-                    logger.info("Sending the message to the output topic");
                 }
             } catch (final WakeupException e) {
                 logger.log(Level.WARN, "Consumer closing - caught exception: " + e);
@@ -97,9 +98,9 @@ class DBLoggerKafkaConsumer implements Runnable, Closeable {
 
     private void sendMessageToActualTopic(String topic, String message) {
         try {
-//            Helper.executeHttpPost(Configurations.CSB_CREATE_TOPIC_URL + topic, true, true);
-            // TODO: check for existing topics
-            KafkaHelper.createNewTopic(topic);
+            if (!KafkaHelper.isTopicExists(topic)) {
+                KafkaHelper.createNewTopic(topic);
+            }
 
             logger.info("Sending the message to topic - " + topic + message);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, "key", message);
@@ -114,7 +115,7 @@ class DBLoggerKafkaConsumer implements Runnable, Closeable {
         }
     }
 
-    private void trySendMessageToDb(UUID channelId, String message) {
+    private void sendMessageToDb(UUID channelId, String message) {
         try {
             logger.info("Sending the message to the db - " + message);
             Main.dbManager.addNewData(channelId, message);

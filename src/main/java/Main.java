@@ -1,6 +1,7 @@
 import common.Configurations;
 import common.Helper;
 import db.DBManager;
+import kafka.KafkaHelper;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -11,6 +12,7 @@ import org.apache.log4j.Logger;
 import runnables.ConsumerRunnable;
 import runnables.ProducerRunnable;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static common.Configurations.MESSAGE_HUB_CREDENTIALS;
@@ -44,9 +46,23 @@ public class Main {
                 ProducerRunnable producerRunnable = new ProducerRunnable(Configurations.PRODUCER_PROPERTIES, Configurations.STREAMS_INPUT_TOPIC, channelId);
                 producerRunnable.run();
             } else if (commandName.equals(DELETE_COMMAND)) {
+                if (!Configurations.ENVIRONMENT.equals("dev")) {
+                    logger.error("Deleting data is supported only in dev environment");
+                    return;
+                }
                 if (ns.getBoolean("tables")) {
                     DBManager dbManager = new DBManager(Configurations.CHANNELS_TABLE, Configurations.DATA_TABLE);
                     dbManager.deleteTables();
+
+                }
+                if (ns.getBoolean("topics")) {
+                    Set<String> topics = KafkaHelper.getExistingTopics();
+                    for (String topic : topics) {
+                        if (topic.startsWith(Configurations.OUTPUT_TOPIC_PREFIX)) {
+                            System.out.println("Deleting topic - " + topic);
+                            KafkaHelper.deleteTopic(topic);
+                        }
+                    }
                 }
             } else {
                 System.out.println("Not supported command" + commandName);
@@ -71,6 +87,7 @@ public class Main {
 
         ArgumentParser delete = subParser.addParser(DELETE_COMMAND).help("Delete data");
         delete.addArgument("--tables").action(Arguments.storeTrue()).help("Will delete the tables in the database");
+        delete.addArgument("--topics").action(Arguments.storeTrue()).help("Will delete all the topics with the dev prefix");
 
         ArgumentParser consumer = subParser.addParser(CONSUMER_COMMAND).help("Starts consumer");
         consumer.addArgument("--channelId").required(true).help("The channel for which consume from topic");
