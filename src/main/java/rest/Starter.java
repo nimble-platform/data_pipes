@@ -23,7 +23,6 @@ import static rest.Main.dbManager;
  * Created by evgeniyh on 5/8/18.
  */
 
-// TODO: add body as json configurations
 // TODO: handle delete topic if command fails
 @Path("/start-new")
 public class Starter {
