@@ -35,10 +35,11 @@ public class Starter {
                                     @QueryParam("target") String target,
                                     @QueryParam("filter") String jsonFilter) {
         try {
-            if (configs != null) {
+            if (!isNullOrEmpty(configs)) {
                 StartChannelConfig channelConfig = (new Gson()).fromJson(configs, StartChannelConfig.class);
                 if (channelConfig == null || channelConfig.isAnyValueMissing()) {
-                    return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body");
+                    logger.error("Failed to parse channel configs - " + configs);
+                    return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body" + configs);
                 }
                 source = channelConfig.getSource();
                 target = channelConfig.getTarget();
