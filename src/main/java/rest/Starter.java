@@ -1,6 +1,6 @@
 package rest;
 
-import common.Configurations;
+import common.Helper;
 import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
 
@@ -19,6 +19,8 @@ import static rest.Main.dbManager;
  * Created by evgeniyh on 5/8/18.
  */
 
+// TODO: add body as json configurations
+// TODO: handle delete topic if command fails
 @Path("/start-new")
 public class Starter {
     private static final Logger logger = Logger.getLogger(Starter.class);
@@ -35,15 +37,13 @@ public class Starter {
         logger.info(String.format("Received POST command on start-new with params source=%s, target=%s, filter=%s", source, target, jsonFilter));
 
         UUID channelId = UUID.randomUUID();
-
-        String topicName = Configurations.OUTPUT_TOPIC_PREFIX + channelId;
-//        String postUrl = String.format("%s%s", Configurations.CSB_CREATE_TOPIC_URL, topicName);
+        logger.info("Starting new channel with id - " + channelId);
 
         try {
-            logger.info("Sending post create to kafka admin to create topic - " + topicName);
-//            Helper.executeHttpPost(postUrl, true, true);
+            String topicName = Helper.generateOutputTopicName(channelId);
+
             KafkaHelper.createNewTopic(topicName);
-            logger.info("Post command successful - inserting new DB record"); // TODO: handle delete topic if command fails
+            logger.info("Output topic for the channel was created successfully - " + topicName);
 
             dbManager.addNewChannel(channelId, source, target, jsonFilter);
             logger.info("Successfully inserted new filter into the DB");

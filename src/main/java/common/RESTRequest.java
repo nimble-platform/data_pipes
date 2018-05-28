@@ -60,8 +60,7 @@ public class RESTRequest {
             connection.setRequestProperty("X-Auth-Token", this.apiKey);
 
             if (acceptHeader) {
-                connection.setRequestProperty("Accept",
-                        "application/vnd.kafka.binary.v1+json");
+                connection.setRequestProperty("Accept", "application/vnd.kafka.binary.v1+json");
             }
 
             // Read the response data from the request and return
@@ -74,6 +73,7 @@ public class RESTRequest {
             while ((inputLine = rd.readLine()) != null) {
                 response.append(inputLine);
             }
+            logger.log(Level.INFO, "Response code for GET - " + String.valueOf(connection.getResponseCode()));
 
             rd.close();
 
@@ -135,7 +135,7 @@ public class RESTRequest {
             wr.close();
 
             responseCode = connection.getResponseCode();
-
+            logger.log(Level.INFO, "Response code for POST - " + String.valueOf(connection.getResponseCode()));
             // Retrieve the response, transform it, then
             // return it to the caller.
             InputStream is = connection.getInputStream();
@@ -165,7 +165,47 @@ public class RESTRequest {
                 connection.disconnect();
             }
         }
+    }
 
+    public String delete(String target) throws NoSuchAlgorithmException, KeyManagementException, IOException {
+        HttpsURLConnection connection = null;
+        if (!target.startsWith("/")) {
+            target = "/" + target;
+        }
+
+        try {
+
+            // Create secure connection to the REST URL.
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+            sslContext.init(null, null, null);
+
+            URL url = new URL(baseUrl + target);
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod("DELETE");
+
+            // Apply headers, in this case, the API key and Kafka content type.
+            connection.setRequestProperty("X-Auth-Token", this.apiKey);
+
+            logger.log(Level.INFO, "REST DELETE response code - " + String.valueOf(connection.getResponseCode()));
+
+            // Retrieve the response, transform it, then
+            // return it to the caller.
+            InputStream is = connection.getInputStream();
+            return inputStreamToString(is);
+        } catch (IOException e) {
+            if (connection == null) {
+                logger.log(Level.ERROR, "REST DELETE request failed with exception: " + e, e);
+                throw e;
+            } else {
+                return inputStreamToString(connection.getErrorStream());
+            }
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
     }
 
     private String inputStreamToString(InputStream is) throws IOException {
