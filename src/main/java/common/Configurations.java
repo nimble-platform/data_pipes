@@ -1,6 +1,7 @@
 package common;
 
 import com.google.gson.Gson;
+import kafka.KafkaHelper;
 import kafka.MessageHubCredentials;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
@@ -59,12 +60,6 @@ public class Configurations {
             STREAMS_APPLICATION_ID = prop.getProperty("streamsApplicationId");
             TOPICS_PARTITIONS = Integer.valueOf(prop.getProperty("topicsPartitions"));
 
-            logger.info("Verifying the streams input topic exists");
-
-
-//            Helper.executeHttpPost(CSB_CREATE_TOPIC_URL + STREAMS_INPUT_TOPIC, true, true);
-//            Helper.executeHttpPost(CSB_CREATE_TOPIC_URL + STREAMS_OUTPUT_TOPIC, true, true);
-
             CONSUMER_PROPERTIES = Helper.loadPropertiesFromResource("consumer.properties");
             CONSUMER_PROPERTIES.put(Configurations.KAFKA_CLIENT_ID, Configurations.OUTPUT_TOPIC_CONSUMER_ID);
 
@@ -80,8 +75,11 @@ public class Configurations {
                 throw  new RuntimeException("Failed to load message hub credentials");
             }
             MESSAGE_HUB_CREDENTIALS = (new Gson()).fromJson(credentials, MessageHubCredentials.class);
-//            System.out.println(MESSAGE_HUB_CREDENTIALS.getApi_key() + MESSAGE_HUB_CREDENTIALS.getKafka_admin_url());
             Helper.updateJaasConfiguration(MESSAGE_HUB_CREDENTIALS.getUser(), MESSAGE_HUB_CREDENTIALS.getPassword());
+
+            logger.info("Verifying the streams input and output topics exists");
+            KafkaHelper.createNewTopic(STREAMS_INPUT_TOPIC);
+            KafkaHelper.createNewTopic(STREAMS_OUTPUT_TOPIC);
         } catch (Exception e) {
             logger.error("Error during load of the configurations", e);
             System.exit(1);
