@@ -4,9 +4,11 @@ import common.Helper;
 import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.UUID;
@@ -26,12 +28,21 @@ public class Starter {
     private static final Logger logger = Logger.getLogger(Starter.class);
 
     @POST
-    public Response startNewChannel(@QueryParam("source") String source,
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response startNewChannel(StartChannelConfig channelConfig,
+                                    @QueryParam("source") String source,
                                     @QueryParam("target") String target,
                                     @QueryParam("filter") String jsonFilter) {
 
-        if (isNullOrEmpty(source) || isNullOrEmpty(target) || isNullOrEmpty(jsonFilter)) {
-            return createResponse(Status.BAD_REQUEST, "Must provide source target and filter parameters");
+        if (channelConfig != null) {
+            if (channelConfig.isAnyValueMissing()) {
+                return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body");
+            }
+            source = channelConfig.getSource();
+            target = channelConfig.getTarget();
+            jsonFilter = channelConfig.getFilter();
+        } else if (isNullOrEmpty(source) || isNullOrEmpty(target) || isNullOrEmpty(jsonFilter)) {
+            return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter params as json body or query params");
         }
 
         logger.info(String.format("Received POST command on start-new with params source=%s, target=%s, filter=%s", source, target, jsonFilter));
@@ -53,5 +64,33 @@ public class Starter {
         }
 
         return createResponse(Status.OK, channelId.toString());
+    }
+
+    private class StartChannelConfig {
+        private final String source;
+        private final String target;
+        private final String filter;
+
+        StartChannelConfig(String source, String target, String filter) {
+            this.source = source;
+            this.target = target;
+            this.filter = filter;
+        }
+
+        String getSource() {
+            return source;
+        }
+
+        String getTarget() {
+            return target;
+        }
+
+        String getFilter() {
+            return filter;
+        }
+
+        boolean isAnyValueMissing() {
+            return isNullOrEmpty(source) || isNullOrEmpty(target) || isNullOrEmpty(filter);
+        }
     }
 }
