@@ -1,5 +1,7 @@
 package rest;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import common.Helper;
 import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
@@ -29,28 +31,28 @@ public class Starter {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response startNewChannel(StartChannelConfig channelConfig,
+    public Response startNewChannel(String configs,
                                     @QueryParam("source") String source,
                                     @QueryParam("target") String target,
                                     @QueryParam("filter") String jsonFilter) {
-
-        if (channelConfig != null) {
-            if (channelConfig.isAnyValueMissing()) {
-                return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body");
-            }
-            source = channelConfig.getSource();
-            target = channelConfig.getTarget();
-            jsonFilter = channelConfig.getFilter();
-        } else if (isNullOrEmpty(source) || isNullOrEmpty(target) || isNullOrEmpty(jsonFilter)) {
-            return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter params as json body or query params");
-        }
-
-        logger.info(String.format("Received POST command on start-new with params source=%s, target=%s, filter=%s", source, target, jsonFilter));
-
-        UUID channelId = UUID.randomUUID();
-        logger.info("Starting new channel with id - " + channelId);
-
         try {
+            if (configs != null) {
+                StartChannelConfig channelConfig = (new Gson()).fromJson(configs, StartChannelConfig.class);
+                if (channelConfig.isAnyValueMissing()) {
+                    return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body");
+                }
+                source = channelConfig.getSource();
+                target = channelConfig.getTarget();
+                jsonFilter = channelConfig.getFilter().toString();
+            } else if (isNullOrEmpty(source) || isNullOrEmpty(target) || isNullOrEmpty(jsonFilter)) {
+                return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter params as json body or query params");
+            }
+
+            logger.info(String.format("Received POST command on start-new with params source=%s, target=%s, filter=%s", source, target, jsonFilter));
+
+            UUID channelId = UUID.randomUUID();
+            logger.info("Starting new channel with id - " + channelId);
+
             String topicName = Helper.generateOutputTopicName(channelId);
 
             KafkaHelper.createNewTopic(topicName);
@@ -58,20 +60,20 @@ public class Starter {
 
             dbManager.addNewChannel(channelId, source, target, jsonFilter);
             logger.info("Successfully inserted new filter into the DB");
+
+            return createResponse(Status.OK, channelId.toString());
         } catch (Exception e) {
             logger.error("Error during start of a new channel", e);
             return createResponse(Status.INTERNAL_SERVER_ERROR, "ERROR !!! " + e.toString());
         }
-
-        return createResponse(Status.OK, channelId.toString());
     }
 
     private class StartChannelConfig {
         private final String source;
         private final String target;
-        private final String filter;
+        private final JsonObject filter;
 
-        StartChannelConfig(String source, String target, String filter) {
+        StartChannelConfig(String source, String target, JsonObject filter) {
             this.source = source;
             this.target = target;
             this.filter = filter;
@@ -85,12 +87,12 @@ public class Starter {
             return target;
         }
 
-        String getFilter() {
+        JsonObject getFilter() {
             return filter;
         }
 
         boolean isAnyValueMissing() {
-            return isNullOrEmpty(source) || isNullOrEmpty(target) || isNullOrEmpty(filter);
+            return isNullOrEmpty(source) || isNullOrEmpty(target) || (filter == null);
         }
     }
 }
