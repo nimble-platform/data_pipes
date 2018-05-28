@@ -37,7 +37,7 @@ public class Starter {
         try {
             if (configs != null) {
                 StartChannelConfig channelConfig = (new Gson()).fromJson(configs, StartChannelConfig.class);
-                if (channelConfig.isAnyValueMissing()) {
+                if (channelConfig == null || channelConfig.isAnyValueMissing()) {
                     return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body");
                 }
                 source = channelConfig.getSource();
