@@ -2,7 +2,6 @@ package common;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -12,6 +11,7 @@ import org.apache.log4j.Logger;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,7 +32,30 @@ public class Helper {
     private final static Logger logger = Logger.getLogger(Helper.class);
 
     private static final String JAAS_CONFIG_PROPERTY = "java.security.auth.login.config";
+    private static ClosingRunnables closingRunnables = new ClosingRunnables();
 
+    static {
+        logger.info("Adding the closing thread to the shutdown hook");
+        Thread closingThread = new Thread(closingRunnables);
+
+        Runtime.getRuntime().addShutdownHook(closingThread);
+    }
+
+    public static void startNewRunnable(Runnable runnable, String runnableDescription) {
+        try {
+            logger.info("Creating new thread for - " + runnableDescription);
+            Thread t = new Thread(runnable);
+            t.start();
+            logger.info("Started successfully thread for - " + runnableDescription);
+        } catch (Exception e) {
+            logger.error("Error during of thread for - " + runnableDescription, e);
+        }
+    }
+
+    public static void addCloseableToShutdownHook(Closeable c) {
+        logger.info(String.format("Adding object %s to the shutdown hook", c.getClass().toString()));
+        closingRunnables.addCloseable(c);
+    }
 
     private static String createNewFilterJson() {
         long current = System.currentTimeMillis();
@@ -67,24 +90,10 @@ public class Helper {
         return Configurations.OUTPUT_TOPIC_PREFIX + channelId;
     }
 
-    public static void updateJaasConfiguration() throws IOException {
-        String credentials = System.getenv("MESSAGE_HUB_CREDENTIALS");
-        if (isNullOrEmpty(credentials)) {
-            logger.error("Failed to get message hub credentials - exiting");
-            System.exit(1);
+    public static void updateJaasConfiguration(String username, String password) throws IOException {
+        if (isNullOrEmpty(username) || isNullOrEmpty(password)) {
+            throw new RuntimeException("Message hub username or password can't be empty");
         }
-        JsonObject jsonObject = (JsonObject) (new JsonParser().parse(credentials));
-        String apiKey = jsonObject.get("api_key").getAsString();
-
-        if (apiKey == null || apiKey.isEmpty()) {
-            logger.error("Failed to initialise api key");
-            throw new RuntimeException("Unable to set the topics handler");
-        } else {
-            logger.debug("Admin url and api-key were set successfully");
-        }
-
-        String username = apiKey.substring(0, 17);
-        String password = apiKey.substring(17);
 
         String jaasConfPath = System.getProperty("java.io.tmpdir") + File.separator + "jaas.conf";
         System.setProperty(JAAS_CONFIG_PROPERTY, jaasConfPath);

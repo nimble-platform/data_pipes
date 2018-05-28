@@ -1,5 +1,7 @@
 package common;
 
+import com.google.gson.Gson;
+import kafka.MessageHubCredentials;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.log4j.Logger;
@@ -19,7 +21,6 @@ public class Configurations {
 
     public static String CHANNEL_ID_KEY = "channelId";
 
-    public static String CSB_CREATE_TOPIC_URL;
     public static String OUTPUT_TOPIC_PREFIX;
 
     public static String DATA_TABLE;
@@ -37,6 +38,9 @@ public class Configurations {
     public static String ENVIRONMENT;
 
     public static String STREAMS_APPLICATION_ID;
+    public static int TOPICS_PARTITIONS;
+
+    public static MessageHubCredentials MESSAGE_HUB_CREDENTIALS;
 
     static {
         try {
@@ -49,16 +53,17 @@ public class Configurations {
             DATA_TABLE = prop.getProperty("dataTable");
             CHANNELS_TABLE = prop.getProperty("channelsTable");
             OUTPUT_TOPIC_PREFIX = prop.getProperty("topicsPrefix");
-            CSB_CREATE_TOPIC_URL = prop.getProperty("csbCreateTopicPath");
             STREAMS_INPUT_TOPIC = prop.getProperty("streamsInputTopic");
             STREAMS_OUTPUT_TOPIC = prop.getProperty("streamsOutputTopic");
             OUTPUT_TOPIC_CONSUMER_ID = prop.getProperty("outputTopicConsumerId");
             STREAMS_APPLICATION_ID = prop.getProperty("streamsApplicationId");
+            TOPICS_PARTITIONS = Integer.valueOf(prop.getProperty("topicsPartitions"));
 
             logger.info("Verifying the streams input topic exists");
 
-            Helper.executeHttpPost(CSB_CREATE_TOPIC_URL + STREAMS_INPUT_TOPIC, true, true);
-            Helper.executeHttpPost(CSB_CREATE_TOPIC_URL + STREAMS_OUTPUT_TOPIC, true, true);
+
+//            Helper.executeHttpPost(CSB_CREATE_TOPIC_URL + STREAMS_INPUT_TOPIC, true, true);
+//            Helper.executeHttpPost(CSB_CREATE_TOPIC_URL + STREAMS_OUTPUT_TOPIC, true, true);
 
             CONSUMER_PROPERTIES = Helper.loadPropertiesFromResource("consumer.properties");
             CONSUMER_PROPERTIES.put(Configurations.KAFKA_CLIENT_ID, Configurations.OUTPUT_TOPIC_CONSUMER_ID);
@@ -69,7 +74,14 @@ public class Configurations {
             STREAMS_PROPERTIES.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
 
             PRODUCER_PROPERTIES = Helper.loadPropertiesFromResource("producer.properties");
-            Helper.updateJaasConfiguration();
+
+            String credentials = System.getenv("MESSAGE_HUB_CREDENTIALS");
+            if (isNullOrEmpty(credentials)) {
+                throw  new RuntimeException("Failed to load message hub credentials");
+            }
+            MESSAGE_HUB_CREDENTIALS = (new Gson()).fromJson(credentials, MessageHubCredentials.class);
+//            System.out.println(MESSAGE_HUB_CREDENTIALS.getApi_key() + MESSAGE_HUB_CREDENTIALS.getKafka_admin_url());
+            Helper.updateJaasConfiguration(MESSAGE_HUB_CREDENTIALS.getUser(), MESSAGE_HUB_CREDENTIALS.getPassword());
         } catch (Exception e) {
             logger.error("Error during load of the configurations", e);
             System.exit(1);
