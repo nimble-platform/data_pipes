@@ -2,6 +2,7 @@ package rest;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import common.Configurations;
 import common.Helper;
 import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
@@ -27,6 +28,7 @@ import static rest.Main.dbManager;
 @Path("/start-new")
 public class Starter {
     private static final Logger logger = Logger.getLogger(Starter.class);
+    private Gson gson = new Gson();
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -36,7 +38,7 @@ public class Starter {
                                     @QueryParam("filter") String jsonFilter) {
         try {
             if (!isNullOrEmpty(configs)) {
-                StartChannelConfig channelConfig = (new Gson()).fromJson(configs, StartChannelConfig.class);
+                StartChannelConfig channelConfig = gson.fromJson(configs, StartChannelConfig.class);
                 if (channelConfig == null || channelConfig.isAnyValueMissing()) {
                     logger.error("Failed to parse channel configs - " + configs);
                     return createResponse(Status.BAD_REQUEST, "Must provide source, target and filter at the json body" + configs);
@@ -61,7 +63,11 @@ public class Starter {
             dbManager.addNewChannel(channelId, source, target, jsonFilter);
             logger.info("Successfully inserted new filter into the DB");
 
-            return createResponse(Status.OK, channelId.toString());
+            JsonObject responseObject = new JsonObject();
+            responseObject.addProperty(Configurations.CHANNEL_ID_KEY, channelId.toString());
+            responseObject.addProperty("inputTopic", Configurations.STREAMS_INPUT_TOPIC);
+
+            return createResponse(Status.CREATED, gson.toJson(responseObject));
         } catch (Exception e) {
             logger.error("Error during start of a new channel", e);
             return createResponse(Status.INTERNAL_SERVER_ERROR, "ERROR !!! " + e.toString());
