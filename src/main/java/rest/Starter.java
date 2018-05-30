@@ -66,6 +66,7 @@ public class Starter {
             JsonObject responseObject = new JsonObject();
             responseObject.addProperty(Configurations.CHANNEL_ID_KEY, channelId.toString());
             responseObject.addProperty("inputTopic", Configurations.STREAMS_INPUT_TOPIC);
+            responseObject.addProperty("outputTopic", topicName);
 
             return createResponse(Status.CREATED, gson.toJson(responseObject));
         } catch (Exception e) {
