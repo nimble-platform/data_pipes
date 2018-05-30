@@ -56,6 +56,11 @@ public class Main {
 
                 }
                 if (ns.getBoolean("topics")) {
+                    System.out.println("Deleting stream's input and output topics");
+
+                    KafkaHelper.deleteTopic(Configurations.STREAMS_OUTPUT_TOPIC);
+                    KafkaHelper.deleteTopic(Configurations.STREAMS_INPUT_TOPIC);
+
                     Set<String> topics = KafkaHelper.getExistingTopics();
                     for (String topic : topics) {
                         if (topic.startsWith(Configurations.OUTPUT_TOPIC_PREFIX)) {

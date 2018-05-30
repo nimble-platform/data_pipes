@@ -1,6 +1,4 @@
 #!/bin/bash
-docker stop $(docker ps -aq) > /dev/null
-
 
 function compile() {
     if [ "$1" == "build" ] ; then
@@ -33,7 +31,6 @@ compile $1
 export startWindow=$(( 20 + 0 * 360))
 export count=1
 
-
 export POSTGRES_USERNAME=""
 export POSTGRES_PASSWORD=""
 export POSTGRES_URL=""
@@ -43,7 +40,7 @@ export ENVIRONMENT="dev"
 export MESSAGE_HUB_CREDENTIALS=''
 
 
-#java -jar ${JAR_PATH} delete --tables ; exit 1
+#java -jar ${JAR_PATH} delete --tables --topics ; exit 1
 
 gnome-terminal --geometry 240x16+50+${startWindow} -x bash -c "docker run -it -p 1000:8080  \
 -e ENVIRONMENT=${ENVIRONMENT} \
@@ -64,15 +61,27 @@ echo
 
 SOURCE="SOURCE_test_user%40test.com"
 TARGET="TARGET_test_user%40test.com"
+FILTER="%7B%22machineId%22%3A%22machine_id_1%22%7D"
 
-CREATE_URL="${SERVICE_PATH}/start-new?source=${SOURCE}&target=${TARGET}&filter=%7B%22machineId%22%3A%22machine_id_1%22%7D"
-echo "Sending create new channel id on ${CREATE_URL}"
+CREATE_URL_QUERY_PARAMS="${SERVICE_PATH}/start-new?source=${SOURCE}&target=${TARGET}&filter=${FILTER}"
+echo "Sending create new channel with query params on ${CREATE_URL_QUERY_PARAMS}"
+CREATE_RESPONSE=`curl -s -X POST ${CREATE_URL_QUERY_PARAMS}`
+echo ${CREATE_RESPONSE}
 
-CHANNEL_ID=`curl -s -X POST ${CREATE_URL}`
-#CHANNEL_ID="ad32f9a6-f403-47fa-b959-27ee71e00a5e"
+CHANNEL_ID=`echo ${CREATE_RESPONSE} | jq .channelId`
+
+#SOURCE="SOURCE_test_user@test.com"
+#TARGET="TARGET_test_user@test.com"
+#FILTER="{\"machineId\":\"machine_id_1\"}"
+#
+#CREATE_URL_JSON_BODY="${SERVICE_PATH}/start-new"
+#echo "Sending create new channel with json body on ${CREATE_URL_JSON_BODY}"
+#CREATE_RESPONSE=`curl -H "Content-Type: application/json" -d "{\"source\":\"${SOURCE}\", \"target\":\"${TARGET}\", \"filter\":${FILTER}}" -s -X POST ${CREATE_URL_JSON_BODY}`
+#CHANNEL_ID=`echo ${CREATE_RESPONSE} | jq .channelId`
+
+#CHANNEL_ID="9c053bee-d6a4-439e-86a2-0339ea4612ae"
 
 echo "The created channel id is ${CHANNEL_ID}"
-#curl -s -X POST ${SERVICE_PATH}/start-new/existing?c_id=${CHANNEL_ID}
 
 startNewTerminalWithProcess "Starting consumer for the channel output topic" "consumer --channelId ${CHANNEL_ID} | tee consumer.log"
 startNewTerminalWithProcess "Starting producer for the streams input topic"  "producer --channelId ${CHANNEL_ID} | tee producer.log"
@@ -81,7 +90,6 @@ function printTargetsChannelsAndMessages() {
     CHANNELS_RESULT=`curl -s ${SERVICE_PATH}/${1}/channels`
     echo "The channels for ${1} are:"
     echo ${CHANNELS_RESULT} | jq
-
 
     MESSAGES_RESULT=`curl -s ${SERVICE_PATH}/${2}/messages`
     echo "The messages for ${2} are:"
@@ -97,11 +105,10 @@ sleep 15
 echo "Printing state for target=${TARGET} and channel=${CHANNEL_ID}"
 printTargetsChannelsAndMessages ${TARGET} ${CHANNEL_ID}
 
-
 DELETE_RESULT=`curl -s -X DELETE ${SERVICE_PATH}/${CHANNEL_ID}`
 echo "Delete result is ${DELETE_RESULT}"
 
 echo "Printing state after DELETE for target=${TARGET} and channel=${CHANNEL_ID}"
 printTargetsChannelsAndMessages ${TARGET} ${CHANNEL_ID}
 
-#java -jar ${JAR_PATH} delete --tables
+docker stop $(docker ps -aq) > /dev/null
