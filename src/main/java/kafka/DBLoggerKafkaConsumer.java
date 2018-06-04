@@ -56,7 +56,7 @@ class DBLoggerKafkaConsumer implements Runnable, Closeable {
                 ConsumerRecords<String, String> records = kafkaConsumer.poll(4000);
 
                 if (records.isEmpty()) {
-                    logger.info("No messages consumed - will retry again with 4 second timeout");
+//                    logger.info("No messages consumed - will retry again with 4 second timeout");
                     continue;
                 }
 
