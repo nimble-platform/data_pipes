@@ -4,12 +4,14 @@ import common.Configurations;
 import org.apache.log4j.Logger;
 
 import java.io.Closeable;
+import java.security.InvalidParameterException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.UUID;
 
 import static common.Helper.isNullOrEmpty;
@@ -27,6 +29,8 @@ public class DBManager implements Closeable{
     private final String connectionUrl;
     private final String password;
     private final String user;
+
+    private HashSet<String> supportedTables = new HashSet<>();
 
     public DBManager(String channelsTableName, String dataTableName) throws Exception {
         this.qm = new QueriesManager(channelsTableName, dataTableName); // Will check the arguments
@@ -47,6 +51,9 @@ public class DBManager implements Closeable{
 
         createTableIfMissing(dbm, channelsTableName, qm.CREATE_CHANNELS_TABLE);
         createTableIfMissing(dbm, dataTableName, qm.CREATE_DATA_TABLE);
+
+        supportedTables.add(channelsTableName);
+        supportedTables.add(dataTableName);
     }
 
     public String getFilterJson(UUID channelId) throws SQLException {
@@ -189,5 +196,18 @@ public class DBManager implements Closeable{
         ps.setObject(1, channelUuid);
 
         executeUpdateStatement(ps, false);
+    }
+
+    public ResultSet readAllTable(String tableName) throws SQLException {
+        if (!supportedTables.contains(tableName)) {
+            logger.error("Not supported table name - " + tableName);
+            throw new InvalidParameterException("Table isn't supported - " + tableName);
+        }
+
+        String selectAll = qm.getReadAllTableQuery(tableName);
+        PreparedStatement ps = connection.prepareStatement(selectAll);
+
+        logger.info("Executing query - " + ps);
+        return ps.executeQuery();
     }
 }

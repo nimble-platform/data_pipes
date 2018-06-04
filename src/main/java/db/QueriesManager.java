@@ -2,6 +2,9 @@ package db;
 
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static common.Helper.isNullOrEmpty;
 
 /**
@@ -28,11 +31,16 @@ public class QueriesManager {
     final String DELETE_CHANNEL;
     final String DELETE_MESSAGES;
 
+    private Map<String, String> nameToQueryAll = new HashMap<>();
 
     public QueriesManager(String channelsTableName, String dataTableName) {
         if (isNullOrEmpty(channelsTableName) || isNullOrEmpty(dataTableName)) {
             throw new NullPointerException("Table names can't be null or empty");
         }
+
+        nameToQueryAll.put(channelsTableName, String.format("SELECT * FROM %s;", channelsTableName));
+        nameToQueryAll.put(dataTableName, String.format("SELECT * FROM %s;", dataTableName));
+
         logger.info(String.format("Channels table = '%s' , DataRequests table = '%s'", channelsTableName, dataTableName));
 
         CREATE_CHANNELS_TABLE = String.format(
@@ -80,5 +88,9 @@ public class QueriesManager {
         logger.info("The insert into data table query is - " + INSERT_INTO_DATA);
 
         logger.info("The get filter for channel id query is - " + GET_FILTER);
+    }
+
+    public String getReadAllTableQuery(String tableName) {
+        return nameToQueryAll.get(tableName);
     }
 }
