@@ -1,6 +1,7 @@
 package rest;
 
 import common.Configurations;
+import db.ConnectionManager;
 import db.DBManager;
 import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
@@ -30,6 +31,7 @@ public class Main extends Application implements ServletContextListener {
     private static final Logger logger = Logger.getLogger(Main.class);
 
     public static DBManager dbManager = createDBManager();
+    private static ConnectionManager connection = dbManager.getConnectionManager();
 
     public Main() {
         KafkaHelper.startKafkaStreams();
@@ -46,27 +48,22 @@ public class Main extends Application implements ServletContextListener {
     @GET
     @Path("/health-check")
     public Response runHealthCheck() {
-        logger.info("TODO !!! Run test against the DB and message hub");
-//        Enumeration loggers = LogManager.getCurrentLoggers();
-//
-//        while(loggers.hasMoreElements()) {
-//            Category c = (Category) loggers.nextElement();
-//            System.out.println(c.getName());
-//            Enumeration appenders = c.getAllAppenders();
-//            while(appenders.hasMoreElements()) {
-//                Appender a = (Appender) appenders.nextElement();
-//                System.out.println(a.getName());
-//            }
-//        }
-//        System.exit(1);
-        return createResponse(Status.OK, "OK");
+        logger.info("Verifying the DB connection is connected");
+        if (connection.isConnected()) {
+            return createResponse(Status.OK, "OK");
+        }
+        logger.error("The connection wasn't alive - trying to reconnect");
+
+        return (connection.reconnect()) ?
+            createResponse(Status.OK, "OK"):
+            createResponse(Status.INTERNAL_SERVER_ERROR, "Failed during the internal checks");
     }
 
     @POST
-    @Path("/reconnect-db")
+    @Path("/reconnect")
     public Response runDBReconnect() {
-        logger.info("Running a DB manager reconnect");
-        return dbManager.reconnect() ?
+        logger.info("Running a reconnection to the DB");
+        return connection.reconnect() ?
                 createResponse(Status.OK, "Reconnected") :
                 createResponse(Status.INTERNAL_SERVER_ERROR, "Failed to reconnect");
     }
