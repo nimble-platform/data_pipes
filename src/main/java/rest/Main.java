@@ -84,7 +84,6 @@ public class Main extends Application implements ServletContextListener {
             return new DBManager(Configurations.CHANNELS_TABLE, Configurations.DATA_TABLE);
         } catch (Exception e) {
             logger.error(e);
-            e.printStackTrace();
             throw new RuntimeException("Error during the creation of the db manager");
         }
     }

@@ -31,7 +31,7 @@ public class KafkaHelper {
             ExistingTopic[] topics = (new Gson()).fromJson(topicsResponse, ExistingTopic[].class);
 
             existingTopics = Arrays.stream(topics).map(ExistingTopic::getName).collect(Collectors.toSet());
-            logger.info("The existing topics are : " + String.join(",", existingTopics));
+            logger.info("The existing topics are :\n" + String.join("\n", existingTopics));
         } catch (Exception e) {
             logger.error("Error during load of the existing topics", e);
         }
@@ -89,7 +89,7 @@ public class KafkaHelper {
             logger.info(String.format("Topic named '%s' was created with POST result - '%s'", topic, postResult));
             existingTopics.add(topic);
         } catch (Exception e) {
-            logger.error(String.format("Exception on creating topic '%s' ", topic), e);
+            logger.error("Exception during creation of topic - " + topic, e);
         }
     }
 
