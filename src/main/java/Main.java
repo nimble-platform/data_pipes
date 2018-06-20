@@ -42,8 +42,9 @@ public class Main {
                 consumerRunnable.run();
             } else if (commandName.equals(PRODUCER_COMMAND)) {
                 String channelIdString = ns.getString("channelId");
+                String consumerCompanyId = ns.getString("consumerCompanyId");
                 UUID channelId = UUID.fromString(channelIdString);
-                ProducerRunnable producerRunnable = new ProducerRunnable(Configurations.PRODUCER_PROPERTIES, Configurations.STREAMS_INPUT_TOPIC, channelId);
+                ProducerRunnable producerRunnable = new ProducerRunnable(Configurations.PRODUCER_PROPERTIES, Configurations.STREAMS_INPUT_TOPIC, channelId, consumerCompanyId);
                 producerRunnable.run();
             } else if (commandName.equals(DELETE_COMMAND)) {
                 if (!Configurations.ENVIRONMENT.equals("dev")) {
@@ -99,6 +100,7 @@ public class Main {
 
         ArgumentParser producer = subParser.addParser(PRODUCER_COMMAND).help("Starts producer");
         producer.addArgument("--channelId").required(true).help("The channel id to attach to data");
+        producer.addArgument("--consumerCompanyId").required(false).help("The id of the producing company");
 
         return parser;
     }

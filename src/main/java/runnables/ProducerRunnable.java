@@ -46,12 +46,14 @@ public class ProducerRunnable implements Runnable {
     private final KafkaProducer<String, String> kafkaProducer;
     private final String topic;
     private UUID channelId;
+    private String consumerCompanyId;
     private int producedMessages;
     private volatile boolean closing = false;
 
-    public ProducerRunnable(Properties producerProperties, String topic, UUID uuid) throws IOException {
+    public ProducerRunnable(Properties producerProperties, String topic, UUID uuid, String consumerCompanyId) throws IOException {
         this.topic = topic;
-        channelId = uuid;
+        this.channelId = uuid;
+        this.consumerCompanyId = consumerCompanyId;
         // Create a Kafka producer with the provided client configuration
         kafkaProducer = new KafkaProducer<>(producerProperties);
 
@@ -120,6 +122,8 @@ public class ProducerRunnable implements Runnable {
         JsonObject header = new JsonObject();
         header.addProperty("machineId", machineId);
         header.addProperty("channelId", channelId.toString());
+        if (consumerCompanyId != null )
+            header.addProperty("producerCompanyID", consumerCompanyId);
         header.addProperty("time", System.currentTimeMillis());
         header.addProperty("data", "This is random data from " + machineId);
 
