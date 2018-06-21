@@ -2,6 +2,7 @@ package filters;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import common.Channel;
 import org.apache.kafka.streams.kstream.Predicate;
 import org.apache.log4j.Logger;
 import rest.Main;
@@ -47,9 +48,8 @@ public class FiltersManager implements Predicate<String, String> {
         if (filter == null) { // Missing locally - get it from the DB
             logger.info("Missing (locally) channel with id - " + channelId);
             try {
-                String storedJson = Main.dbManager.getFilterJson(channelId);
-                JsonObject filterJsonObject = parser.parse(storedJson).getAsJsonObject();
-                filter = new ChannelFilter(filterJsonObject);
+                Channel channel = Main.dbManager.getChannel(channelId);
+                filter = new ChannelFilter(channel.getFilter());
 
                 idToFilter.put(channelId, filter);
             } catch (Exception e) {

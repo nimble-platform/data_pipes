@@ -23,7 +23,7 @@ public class QueriesManager {
     final String INSERT_INTO_CHANNELS;
     final String INSERT_INTO_DATA;
 
-    final String GET_FILTER;
+    final String GET_CHANNEL;
 
     final String DELETE_DATA_TABLE;
     final String DELETE_CHANNELS_TABLE;
@@ -61,7 +61,7 @@ public class QueriesManager {
         INSERT_INTO_CHANNELS = String.format("INSERT INTO %s VALUES (?,?,?,?);", channelsTableName);
         INSERT_INTO_DATA = String.format("INSERT INTO %s VALUES (?,?,?);", dataTableName);
 
-        GET_FILTER = String.format("SELECT filter FROM %s WHERE c_id=?;", channelsTableName);
+        GET_CHANNEL = String.format("SELECT * FROM %s WHERE c_id=?;", channelsTableName);
 
         DELETE_DATA_TABLE = String.format("DROP TABLE %s ;", dataTableName);
         DELETE_CHANNELS_TABLE = String.format("DROP TABLE %s ;", channelsTableName);
@@ -87,7 +87,7 @@ public class QueriesManager {
         logger.info("The insert into channels table query is - " + INSERT_INTO_CHANNELS);
         logger.info("The insert into data table query is - " + INSERT_INTO_DATA);
 
-        logger.info("The get filter for channel id query is - " + GET_FILTER);
+        logger.info("The get channel for channel id query is - " + GET_CHANNEL);
     }
 
     public String getReadAllTableQuery(String tableName) {
