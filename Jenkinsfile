@@ -23,7 +23,7 @@ node ('nimble-jenkins-slave') {
 
     if (env.BRANCH_NAME == 'master') {
         stage('Build Docker') {
-            sh 'docker build -t nimbleplatform/data-pipes:latest .'
+            sh 'docker build -t nimbleplatform/data-pipes:master .'
         }
 
         stage('Push Docker') {
