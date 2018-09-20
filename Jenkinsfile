@@ -16,9 +16,9 @@ node ('nimble-jenkins-slave') {
             sh 'docker push nimbleplatform/data-pipes:staging'
         }
 
-//        stage('Deploy') {
-//            sh 'ssh staging "cd /srv/nimble-staging/ && ./run-staging.sh restart-single identity-service"' // ToDo: implement
-//        }
+        stage('Deploy') {
+            sh 'ssh staging "cd /srv/nimble-staging/ && ./run-staging.sh restart-single identity-service"' // ToDo: implement
+        }
     }
 
     if (env.BRANCH_NAME == 'master') {
@@ -30,9 +30,9 @@ node ('nimble-jenkins-slave') {
             sh 'docker push nimbleplatform/data-pipes:latest'
         }
 
-//        stage('Deploy') {
-//            sh 'ssh nimble "cd /data/deployment_setup/prod/ && sudo ./run-prod.sh restart-single identity-service"' // ToDo: implement
-//        }
+        stage('Deploy') {
+            sh 'ssh nimble "cd /data/deployment_setup/prod/ && sudo ./run-prod.sh restart-single data-pipes"'
+        }
     }
 
     // Kubernetes deployment is disabled for the time being

@@ -45,7 +45,7 @@ public class Configurations {
 
     static {
         try {
-            ENVIRONMENT = System.getenv("ENVIRONMENT");
+            ENVIRONMENT = System.getenv("DATA_PIPES_ENVIRONMENT");
             if (isNullOrEmpty(ENVIRONMENT)) {
                 throw new RuntimeException("Missing the ENVIRONMENT variable");
             }

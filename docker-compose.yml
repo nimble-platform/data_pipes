@@ -7,10 +7,10 @@ services:
     env_file:
       - .env
     environment:
-      ENVIRONMENT: "prod"
-      POSTGRES_URL: "data-pipes-db:5432/datapipesdb"
-      POSTGRES_USERNAME: "admin"
-      POSTGRES_PASSWORD: "password"
+      DATA_PIPES_ENVIRONMENT: "prod"
+      DATA_PIPES_POSTGRES_URL: "data-pipes-db:5432/datapipesdb"
+      DATA_PIPES_POSTGRES_USERNAME: "admin"
+      DATA_PIPES_POSTGRES_PASSWORD: "password"
 
   data-pipes-db:
     image: postgres:10

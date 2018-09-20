@@ -28,9 +28,9 @@ public class ConnectionManager {
         try {
             Class.forName("org.postgresql.Driver"); // Check that the driver is ok
 
-            user = System.getenv("POSTGRES_USERNAME");
-            password = System.getenv("POSTGRES_PASSWORD");
-            String url = System.getenv("POSTGRES_URL");
+            user = System.getenv("DATA_PIPES_POSTGRES_USERNAME");
+            password = System.getenv("DATA_PIPES_POSTGRES_PASSWORD");
+            String url = System.getenv("DATA_PIPES_POSTGRES_URL");
             if (isNullOrEmpty(user) || isNullOrEmpty(password) || isNullOrEmpty(url)) {
                 throw new IllegalArgumentException("Credential values can't be null or empty");
             }
