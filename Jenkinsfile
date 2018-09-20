@@ -26,6 +26,10 @@ node ('nimble-jenkins-slave') {
             sh 'docker build -t nimbleplatform/data-channels:master .'
         }
 
+        stage('Push Docker') {
+            sh 'docker push nimbleplatform/data-pipes:latest'
+        }
+
 //        stage('Deploy') {
 //            sh 'ssh nimble "cd /data/deployment_setup/prod/ && sudo ./run-prod.sh restart-single identity-service"' // ToDo: implement
 //        }
