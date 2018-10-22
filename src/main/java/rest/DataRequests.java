@@ -83,7 +83,7 @@ public class DataRequests {
                 message.add("header", header);
                 message.add("payload", payload);
 
-                messages.add(message);
+                messages.add(gson.toJson(message));
             }
 
             JsonObject returnObject = new JsonObject();
