@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+
+  data-pipes:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATA_PIPES_ENVIRONMENT: "prod"
+      DATA_PIPES_POSTGRES_URL: "data-pipes-db:5432/datapipesdb"
+      DATA_PIPES_POSTGRES_USERNAME: "admin"
+      DATA_PIPES_POSTGRES_PASSWORD: "password"
+
+  data-pipes-db:
+    image: postgres:10
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: "datapipesdb"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+
+volumes:
+  postgres_data:
+    driver: local
+

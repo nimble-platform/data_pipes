@@ -3,6 +3,7 @@ package rest;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import common.Channel;
 import common.Helper;
 import kafka.KafkaHelper;
 import org.apache.log4j.Logger;
@@ -63,6 +64,29 @@ public class DataRequests {
             JsonObject returnObject = createJsonObjectWithJsonArrayFromResult(rs, "messages");
 
             return Helper.createResponse(Response.Status.OK, gson.toJson(returnObject));
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to parse the channel id - " + channelId, e);
+            return Helper.createResponse(Response.Status.BAD_REQUEST, "Wrong channel id (should be UUID)");
+        } catch (Exception e) {
+            logger.error("Failed to read messages for channel id - " + channelId, e);
+            return Helper.createResponse(Response.Status.INTERNAL_SERVER_ERROR, "Failed to get messages for channel - " + channelId);
+        }
+    }
+
+
+    @GET
+    @Path("/{channelId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getChannel(@PathParam("channelId") String channelId) {
+        if (Helper.isNullOrEmpty(channelId)) {
+            return Helper.createResponse(Response.Status.BAD_REQUEST, "Channel id can't be null or empty");
+        }
+        try {
+            logger.info("Retrieving from DB channel with id - " + channelId);
+            UUID channelUuid = UUID.fromString(channelId);
+            Channel channel = Main.dbManager.getChannel(channelUuid);
+
+            return Helper.createResponse(Response.Status.OK, new Gson().toJson(channel));
         } catch (IllegalArgumentException e) {
             logger.error("Failed to parse the channel id - " + channelId, e);
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Wrong channel id (should be UUID)");

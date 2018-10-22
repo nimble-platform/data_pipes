@@ -1,5 +1,8 @@
 package db;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import common.Channel;
 import common.Configurations;
 import org.apache.log4j.Logger;
 
@@ -36,8 +39,8 @@ public class DBManager implements Closeable {
         supportedTables.add(dataTableName);
     }
 
-    public String getFilterJson(UUID channelId) throws SQLException {
-        PreparedStatement ps = connection.prepareStatement(qm.GET_FILTER);
+    public Channel getChannel(UUID channelId) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement(qm.GET_CHANNEL);
 
         ps.setObject(1, channelId);
         logger.info("Executing query - " + ps);
@@ -48,17 +51,19 @@ public class DBManager implements Closeable {
             logger.error("Query completed successfully - result was empty !!!");
             throw new IllegalArgumentException("UUID = " + channelId.toString() + " Has no data in the table");
         }
-        String data = null;
+        Channel channel = null;
         while (rs.next()) {
-            if (data != null) {
+            if (channel != null) {
                 logger.error("Received two rows for channelId = " + channelId);
                 throw new IllegalStateException("Received two rows for channelId = " + channelId);
             }
-            data = rs.getString(1);
+            UUID uuid = UUID.fromString(rs.getString(1));
+            JsonObject filter = new JsonParser().parse(rs.getString(4)).getAsJsonObject();
+            channel = new Channel(uuid, rs.getString(2), rs.getString(3), filter);
         }
 
-        logger.info("The received data was - " + data);
-        return data;
+        logger.info("The received data was - " + channel);
+        return channel;
     }
 
     public void addNewChannel(UUID channelId, String source, String target, String jsonFilter) throws SQLException {
