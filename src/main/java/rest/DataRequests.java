@@ -67,20 +67,26 @@ public class DataRequests {
 
             String machineId = Helper.generateRandomMachineId();
 
-            JsonObject header = new JsonObject();
-            header.addProperty("machineId", machineId);
-            header.addProperty("channelId", channelId);
-            header.addProperty("time", System.currentTimeMillis());
-            header.addProperty("data", "This is random data from " + machineId);
+            JsonArray returnObject = new JsonArray();
 
-            JsonObject payload = new JsonObject();
-            payload.addProperty("data", "This is random data from " + machineId);
+            for (int i = 0; i<3;i++) {
+                JsonObject header = new JsonObject();
+                header.addProperty("machineId", machineId);
+                header.addProperty("channelId", channelId);
+                header.addProperty("time", System.currentTimeMillis());
+                header.addProperty("data", "This is random data from " + machineId);
 
-            JsonObject message = new JsonObject();
-            message.add("header", header);
-            message.add("payload", payload);
+                JsonObject payload = new JsonObject();
+                payload.addProperty("data", "This is random data from " + machineId);
 
-            return Helper.createResponse(Response.Status.OK, gson.toJson(message));
+                JsonObject message = new JsonObject();
+                message.add("header", header);
+                message.add("payload", payload);
+
+                returnObject.add(message);
+            }
+
+            return Helper.createResponse(Response.Status.OK, gson.toJson(returnObject));
         } catch (IllegalArgumentException e) {
             logger.error("Failed to parse the channel id - " + channelId, e);
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Wrong channel id (should be UUID)");
