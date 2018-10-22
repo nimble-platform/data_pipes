@@ -40,6 +40,10 @@ public class Main extends Application implements ServletContextListener {
         KafkaHelper.createNewTopic(Configurations.STREAMS_INPUT_TOPIC);
     }
 
+    public static void main(String[] args) {
+        new Main();
+    }
+
     @GET
     public Response getHello() {
         return createResponse(Status.OK, "Hello from Data-Channels Service");

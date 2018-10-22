@@ -17,6 +17,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -60,10 +62,25 @@ public class DataRequests {
         try {
             logger.info("Retrieving all the messages for channel id - " + channelId);
             UUID channelUuid = UUID.fromString(channelId);
-            ResultSet rs = Main.dbManager.getDataForChannelId(channelUuid);
-            JsonObject returnObject = createJsonObjectWithJsonArrayFromResult(rs, "messages");
+//            ResultSet rs = Main.dbManager.getDataForChannelId(channelUuid);
+//            JsonObject returnObject = createJsonObjectWithJsonArrayFromResult(rs, "messages");
 
-            return Helper.createResponse(Response.Status.OK, gson.toJson(returnObject));
+            String machineId = Helper.generateRandomMachineId();
+
+            JsonObject header = new JsonObject();
+            header.addProperty("machineId", machineId);
+            header.addProperty("channelId", channelId);
+            header.addProperty("time", System.currentTimeMillis());
+            header.addProperty("data", "This is random data from " + machineId);
+
+            JsonObject payload = new JsonObject();
+            payload.addProperty("data", "This is random data from " + machineId);
+
+            JsonObject message = new JsonObject();
+            message.add("header", header);
+            message.add("payload", payload);
+
+            return Helper.createResponse(Response.Status.OK, gson.toJson(message));
         } catch (IllegalArgumentException e) {
             logger.error("Failed to parse the channel id - " + channelId, e);
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Wrong channel id (should be UUID)");
