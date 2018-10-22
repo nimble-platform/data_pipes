@@ -67,7 +67,7 @@ public class DataRequests {
 
             String machineId = Helper.generateRandomMachineId();
 
-            JsonArray returnObject = new JsonArray();
+            JsonArray messages = new JsonArray();
 
             for (int i = 0; i<3;i++) {
                 JsonObject header = new JsonObject();
@@ -83,8 +83,11 @@ public class DataRequests {
                 message.add("header", header);
                 message.add("payload", payload);
 
-                returnObject.add(message);
+                messages.add(message);
             }
+
+            JsonObject returnObject = new JsonObject();
+            returnObject.add("messages", messages);
 
             return Helper.createResponse(Response.Status.OK, gson.toJson(returnObject));
         } catch (IllegalArgumentException e) {
