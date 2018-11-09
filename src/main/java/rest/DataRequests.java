@@ -62,32 +62,8 @@ public class DataRequests {
         try {
             logger.info("Retrieving all the messages for channel id - " + channelId);
             UUID channelUuid = UUID.fromString(channelId);
-//            ResultSet rs = Main.dbManager.getDataForChannelId(channelUuid);
-//            JsonObject returnObject = createJsonObjectWithJsonArrayFromResult(rs, "messages");
-
-            String machineId = Helper.generateRandomMachineId();
-
-            JsonArray messages = new JsonArray();
-
-            for (int i = 0; i<3;i++) {
-                JsonObject header = new JsonObject();
-                header.addProperty("machineId", machineId);
-                header.addProperty("channelId", channelId);
-                header.addProperty("time", System.currentTimeMillis());
-                header.addProperty("data", "This is random data from " + machineId);
-
-                JsonObject payload = new JsonObject();
-                payload.addProperty("data", "This is random data from " + machineId);
-
-                JsonObject message = new JsonObject();
-                message.add("header", header);
-                message.add("payload", payload);
-
-                messages.add(gson.toJson(message));
-            }
-
-            JsonObject returnObject = new JsonObject();
-            returnObject.add("messages", messages);
+            ResultSet rs = Main.dbManager.getDataForChannelId(channelUuid);
+            JsonObject returnObject = createJsonObjectWithJsonArrayFromResult(rs, "messages");
 
             return Helper.createResponse(Response.Status.OK, gson.toJson(returnObject));
         } catch (IllegalArgumentException e) {
