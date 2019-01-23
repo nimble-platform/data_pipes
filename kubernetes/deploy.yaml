@@ -2,13 +2,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: data-channels
-  name: data-channels
+    app: data-pipes
+  name: data-pipes
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: data-channels
+      app: data-pipes
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -18,12 +18,12 @@ spec:
   template:
     metadata:
       labels:
-        app: data-channels
+        app: data-pipes
     spec:
       containers:
-      - image: nimbleplatform/data-channels:IMAGE_TAG
+      - image: nimbleplatform/data-pipes:IMAGE_TAG
         imagePullPolicy: Always
-        name: data-channels
+        name: data-pipes
         env:
         - name: ENVIRONMENT
           value: "prod"
