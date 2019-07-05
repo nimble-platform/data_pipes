@@ -43,6 +43,9 @@ public class Configurations {
 
     public static MessageHubCredentials MESSAGE_HUB_CREDENTIALS;
 
+    public static String INTERNAL_TOPIC_PREFIX;
+    public static boolean enableStream;
+
     static {
         try {
             ENVIRONMENT = System.getenv("DATA_PIPES_ENVIRONMENT");
@@ -54,6 +57,7 @@ public class Configurations {
             DATA_TABLE = prop.getProperty("dataTable");
             CHANNELS_TABLE = prop.getProperty("channelsTable");
             OUTPUT_TOPIC_PREFIX = prop.getProperty("topicsPrefix");
+            
             STREAMS_INPUT_TOPIC = prop.getProperty("streamsInputTopic");
             STREAMS_OUTPUT_TOPIC = prop.getProperty("streamsOutputTopic");
             OUTPUT_TOPIC_CONSUMER_ID = prop.getProperty("outputTopicConsumerId");
@@ -70,6 +74,7 @@ public class Configurations {
 
             PRODUCER_PROPERTIES = Helper.loadPropertiesFromResource("producer.properties");
 
+            
             String credentials = System.getenv("MESSAGE_HUB_CREDENTIALS");
             if (isNullOrEmpty(credentials)) {
                 throw  new RuntimeException("Failed to load message hub credentials");
@@ -77,9 +82,17 @@ public class Configurations {
             MESSAGE_HUB_CREDENTIALS = (new Gson()).fromJson(credentials, MessageHubCredentials.class);
             Helper.updateJaasConfiguration(MESSAGE_HUB_CREDENTIALS.getUser(), MESSAGE_HUB_CREDENTIALS.getPassword());
 
-            logger.info("Verifying the streams input and output topics exists");
-            KafkaHelper.createNewTopic(STREAMS_INPUT_TOPIC);
-            KafkaHelper.createNewTopic(STREAMS_OUTPUT_TOPIC);
+            INTERNAL_TOPIC_PREFIX = prop.getProperty("intenalTopicsPrefix");
+            if (INTERNAL_TOPIC_PREFIX== null || "".equalsIgnoreCase(INTERNAL_TOPIC_PREFIX)) {
+                INTERNAL_TOPIC_PREFIX = "DATACHANNEL";
+            }
+
+            enableStream = Boolean.getBoolean( prop.getProperty("enableStream") );
+            if (enableStream) {
+                logger.info("Verifying the streams input and output topics exists");
+                KafkaHelper.createNewTopic(STREAMS_INPUT_TOPIC);
+                KafkaHelper.createNewTopic(STREAMS_OUTPUT_TOPIC);
+            }
         } catch (Exception e) {
             logger.error("Error during load of the configurations", e);
             System.exit(1);

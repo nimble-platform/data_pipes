@@ -34,10 +34,12 @@ public class Main extends Application implements ServletContextListener {
     private static ConnectionManager connection = dbManager.getConnectionManager();
 
     public Main() {
-        KafkaHelper.startKafkaStreams();
-        KafkaHelper.startDbLoggerKafkaConsumer();
-        KafkaHelper.createNewTopic(Configurations.STREAMS_OUTPUT_TOPIC);
-        KafkaHelper.createNewTopic(Configurations.STREAMS_INPUT_TOPIC);
+        if (Configurations.enableStream) {
+            KafkaHelper.startKafkaStreams();
+            KafkaHelper.startDbLoggerKafkaConsumer();
+            KafkaHelper.createNewTopic(Configurations.STREAMS_OUTPUT_TOPIC);
+            KafkaHelper.createNewTopic(Configurations.STREAMS_INPUT_TOPIC);
+        }
     }
 
     public static void main(String[] args) {
@@ -46,7 +48,7 @@ public class Main extends Application implements ServletContextListener {
 
     @GET
     public Response getHello() {
-        return createResponse(Status.OK, "Hello from Data-Channels Service");
+        return createResponse(Status.OK, "Hello from Internal DataChannel Service");
     }
 
     @GET

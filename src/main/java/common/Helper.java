@@ -90,6 +90,10 @@ public class Helper {
         return Configurations.OUTPUT_TOPIC_PREFIX + channelId;
     }
 
+    public static String generateInternalTopicName(String idDataChannel, String idSensor) {
+        return Configurations.INTERNAL_TOPIC_PREFIX+"-" + idDataChannel+"-" + idSensor;
+    }
+
     public static void updateJaasConfiguration(String username, String password) throws IOException {
         if (isNullOrEmpty(username) || isNullOrEmpty(password)) {
             throw new RuntimeException("Message hub username or password can't be empty");

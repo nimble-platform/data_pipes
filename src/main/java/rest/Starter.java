@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,16 +22,17 @@ import static common.Helper.isNullOrEmpty;
 import static rest.Main.dbManager;
 
 /**
- * Created by evgeniyh on 5/8/18.
+ * Created by evgeniyh on 5/8/18
+ * Modified by andrea.musumeci on 07.05.10
  */
 
-// TODO: handle delete topic if command fails
-@Path("/start-new")
+@Path("/manage")
 public class Starter {
     private static final Logger logger = Logger.getLogger(Starter.class);
     private Gson gson = new Gson();
 
     @POST
+    @Path("/startNewChannel/")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response startNewChannel(String configs,
                                     @QueryParam("source") String source,
@@ -75,6 +77,44 @@ public class Starter {
         }
     }
 
+    
+    @POST
+    @Path("/createInternalSensorTopic/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createInternalSensorTopic(@QueryParam("idDataChannel") String idDataChannel,
+                                    @QueryParam("idSensor") String idSensor,
+                                    @HeaderParam(value = "Authorization") String bearer
+                                    ) {
+        try {
+            
+            
+        // check if request is authorized $$TODO
+        //will ask to datachannelservice if user is authorized to work on this channel and sensor
+            
+
+            if ( isNullOrEmpty(idDataChannel)  ||  isNullOrEmpty(idSensor)  ) {
+                return createResponse(Status.BAD_REQUEST, "Must provide idDatachannel, idSensor params as query params");
+            }
+
+            logger.info(String.format("Received POST command on createInternalDataChannel with params idDatachannel=%s, idSensor=%s ", idDataChannel, idSensor));
+
+
+            String topicName = Helper.generateInternalTopicName(idDataChannel, idSensor);
+            logger.info("Starting new internal topic - " + topicName);
+
+            KafkaHelper.createNewTopic(topicName);
+            JsonObject responseObject = new JsonObject();
+            responseObject.addProperty("topicName", topicName);
+            return createResponse(Status.CREATED, gson.toJson(responseObject));
+
+        } catch (Exception e) {
+            logger.error("Error during start of a new internal channel", e);
+            return createResponse(Status.INTERNAL_SERVER_ERROR, "ERROR !!! " + e.toString());
+        }
+    }
+
+    
+    
     private class StartChannelConfig {
         private final String source;
         private final String target;

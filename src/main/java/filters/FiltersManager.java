@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import common.Channel;
 import org.apache.kafka.streams.kstream.Predicate;
+
 import org.apache.log4j.Logger;
 import rest.Main;
 
@@ -23,7 +24,6 @@ public class FiltersManager implements Predicate<String, String> {
     private final Map<UUID, ChannelFilter> idToFilter = new ConcurrentHashMap<>();
     private final JsonParser parser = new JsonParser();
 
-    @Override
     public boolean test(String s, String s2) {
         JsonObject header;
         try {
