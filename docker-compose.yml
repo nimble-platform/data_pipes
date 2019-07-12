@@ -11,6 +11,8 @@ services:
       DATA_PIPES_POSTGRES_URL: "data-pipes-db:5432/datapipesdb"
       DATA_PIPES_POSTGRES_USERNAME: "admin"
       DATA_PIPES_POSTGRES_PASSWORD: "password"
+      IDENTITY_SERVICE_URL: "http://161.156.70.122/identity"
+      DATACHANNEL_URL: "http://161.156.70.122/datachannel"
 
   data-pipes-db:
     image: postgres:10

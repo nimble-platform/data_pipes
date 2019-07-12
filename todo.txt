@@ -1,0 +1,8 @@
+Next releases
+=============
+
+integration to Identity Service: verify if a user can access to Nimble and the token is valid
+integration to Datachannel Service: verify if a user can read/write on a single sensor topic
+integration into Docke_setup project
+
+
