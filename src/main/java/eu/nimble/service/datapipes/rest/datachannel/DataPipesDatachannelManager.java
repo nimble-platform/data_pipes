@@ -41,6 +41,9 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
     )
    {
         try {
+            if (!Configurations.enableStream) {
+                        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+            }
             if (!isNullOrEmpty(configs)) {
                 StartChannelConfig channelConfig = gson.fromJson(configs, StartChannelConfig.class);
                 if (channelConfig == null || channelConfig.isAnyValueMissing()) {

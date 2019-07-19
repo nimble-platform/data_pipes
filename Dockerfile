@@ -1,8 +1,14 @@
-FROM tomcat
-MAINTAINER evgeniyh@il.ibm.com
+FROM openjdk:8
+MAINTAINER Holonix Srl <musumeci.holonix@gmail.com>
+VOLUME /tmp
+ARG finalName
+ENV JAR '/'$finalName
+ARG port
+ADD $finalName $JAR
+RUN touch $JAR
+ENV PORT 8889
+EXPOSE $PORT
 
-RUN rm -rf /usr/local/tomcat/webapps/*
+RUN env
 
-ADD ./target/data_pipes.war /usr/local/tomcat/webapps/ROOT.war
-
-CMD ["catalina.sh", "run"]
+ENTRYPOINT ["java", "-jar", "data-pipes-service.jar"]

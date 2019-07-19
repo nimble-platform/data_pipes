@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import eu.nimble.service.datapipes.common.Channel;
+import eu.nimble.service.datapipes.common.Configurations;
 import eu.nimble.service.datapipes.common.Helper;
 import eu.nimble.service.datapipes.kafka.KafkaHelper;
 import io.swagger.annotations.Api;
@@ -41,6 +42,9 @@ public class DataRequests {
     @Path("/{target}/channels")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllChannelsForTarget(@PathParam("target") String target) {
+        if (!Configurations.enableDbPersistence) {
+            return Helper.createResponse(Response.Status.INTERNAL_SERVER_ERROR, "Service not enabled to get data for target - " + target);
+        }
         if (Helper.isNullOrEmpty(target)) {
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Target name can't be null or empty");
         }
@@ -62,6 +66,9 @@ public class DataRequests {
     @Path("/{channelId}/messages")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllMessageForChannel(@PathParam("channelId") String channelId) {
+        if (!Configurations.enableDbPersistence) {
+            return Helper.createResponse(Response.Status.INTERNAL_SERVER_ERROR, "Service not enabled");
+        }
         if (Helper.isNullOrEmpty(channelId)) {
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Channel id can't be null or empty");
         }
@@ -86,6 +93,9 @@ public class DataRequests {
     @Path("/{channelId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getChannel(@PathParam("channelId") String channelId) {
+        if (!Configurations.enableDbPersistence) {
+            return Helper.createResponse(Response.Status.INTERNAL_SERVER_ERROR, "Service not enabled");
+        }
         if (Helper.isNullOrEmpty(channelId)) {
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Channel id can't be null or empty");
         }
@@ -107,6 +117,9 @@ public class DataRequests {
     @DELETE
     @Path("/{channelId}")
     public Response deleteChannel(@PathParam("channelId") String channelId) {
+        if (!Configurations.enableDbPersistence) {
+            return Helper.createResponse(Response.Status.INTERNAL_SERVER_ERROR, "Service not enabled");
+        }
         if (Helper.isNullOrEmpty(channelId)) {
             return Helper.createResponse(Response.Status.BAD_REQUEST, "Channel id can't be null or empty");
         }

@@ -45,6 +45,7 @@ public class Configurations {
 
     public static String INTERNAL_TOPIC_PREFIX;
     public static boolean enableStream;
+    public static boolean enableDbPersistence;
 
     static {
         try {
@@ -93,6 +94,8 @@ public class Configurations {
                 KafkaHelper.createNewTopic(STREAMS_INPUT_TOPIC);
                 KafkaHelper.createNewTopic(STREAMS_OUTPUT_TOPIC);
             }
+
+            enableDbPersistence = Boolean.getBoolean( prop.getProperty("enableDbPersistence") );
         } catch (Exception e) {
             logger.error("Error during load of the configurations", e);
             System.exit(1);
