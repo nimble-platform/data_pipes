@@ -2,6 +2,8 @@ package eu.nimble.service.datapipes.rest.datachannel;
 
 import eu.nimble.service.datapipes.rest.check.*;
 import java.io.IOException;
+import java.util.Optional;
+
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.swagger.annotations.*;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,9 @@ import org.springframework.web.bind.annotation.*;
                                     @ApiParam(value = "idSensor", required = true)
                                     @RequestParam String idSensor,
                                     @ApiParam(value = "maxwaitms", required = false)
-                                    @RequestParam int maxwaitms,
+                                    @RequestParam Optional<Integer> maxwaitms,
                                     @ApiParam(value = "maxbytes", required = false)
-                                    @RequestParam int maxbytes,
+                                    @RequestParam Optional<Integer> maxbytes,
                                     @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
                                     @RequestHeader(value = "Authorization") String bearer)
          throws IOException, UnirestException;

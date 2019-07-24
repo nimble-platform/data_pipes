@@ -5,7 +5,7 @@ server:
 spring:
   application:
     # the name of the application represents the global identifier of this microservice.
-    name: data-pipes-service
+    name: internaldatachannel
   cloud:
     config:
       uri: ${CONFIG_SERVER_URI:http://localhost:8889}
@@ -27,10 +27,12 @@ nimble:
     - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
   corsEnabled: false
   data-pipes:
-  identity:
-    identity-url: ${IDENTITY_SERVICE_URL:http://161.156.70.122/identity}
-  datachannel:
-    datachannel-url: ${DATACHANNEL_URL:http://161.156.70.122/datachannel}
+    env:  ${DATA_PIPES_ENVIRONMENT}
+    message-hub-credentials:  ${MESSAGE_HUB_CREDENTIALS}
+    identity:
+      identity-url: ${IDENTITY_SERVICE_URL:http://161.156.70.122/identity}
+    datachannel:
+      datachannel-url: ${DATACHANNEL_URL:http://161.156.70.122/datachannel}
 
 logging:
   level:

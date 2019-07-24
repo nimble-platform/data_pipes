@@ -6,6 +6,7 @@ import eu.nimble.service.datapipes.kafka.MessageHubCredentials;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Properties;
 
@@ -41,6 +42,8 @@ public class Configurations {
     public static String STREAMS_APPLICATION_ID;
     public static int TOPICS_PARTITIONS;
 
+    private static String CREDENTIALS;
+
     public static MessageHubCredentials MESSAGE_HUB_CREDENTIALS;
 
     public static String INTERNAL_TOPIC_PREFIX;
@@ -75,12 +78,12 @@ public class Configurations {
 
             PRODUCER_PROPERTIES = Helper.loadPropertiesFromResource("producer.properties");
 
-            
-            String credentials = System.getenv("MESSAGE_HUB_CREDENTIALS");
-            if (isNullOrEmpty(credentials)) {
+
+            CREDENTIALS = System.getenv("MESSAGE_HUB_CREDENTIALS");
+            if (isNullOrEmpty(CREDENTIALS)) {
                 throw  new RuntimeException("Failed to load message hub credentials");
             }
-            MESSAGE_HUB_CREDENTIALS = (new Gson()).fromJson(credentials, MessageHubCredentials.class);
+            MESSAGE_HUB_CREDENTIALS = (new Gson()).fromJson(CREDENTIALS, MessageHubCredentials.class);
             Helper.updateJaasConfiguration(MESSAGE_HUB_CREDENTIALS.getUser(), MESSAGE_HUB_CREDENTIALS.getPassword());
 
             INTERNAL_TOPIC_PREFIX = prop.getProperty("intenalTopicsPrefix");

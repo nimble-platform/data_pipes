@@ -4,6 +4,7 @@ import eu.nimble.service.datapipes.common.Configurations;
 import eu.nimble.service.datapipes.common.Helper;
 import static eu.nimble.service.datapipes.common.Helper.isNullOrEmpty;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Properties;
 
 import io.swagger.annotations.ApiParam;
@@ -40,21 +41,21 @@ public class RestConsumer  implements DataPipesDatachannelConsumerApi {
 
     public ResponseEntity<?> getNextMessages(
             @ApiParam(name = "idDataChannel", value = "", required = true)
-            @RequestParam("idDataChannel") String idDataChannel, 
+            @RequestParam("idDataChannel") String idDataChannel,
             @ApiParam(name = "idSensor", value = "", required = true)
-            @RequestParam("idSensor") String idSensor, 
+            @RequestParam("idSensor") String idSensor,
             @ApiParam(name = "maxwaitms", value = "Max ms to wait - default 5000", required = false)
-            @RequestParam("maxwaitms") int maxwaitms, 
+            @RequestParam("maxwaitms")Optional<Integer> maxwaitms,
             @ApiParam(name = "maxbytes", value = "Max bytes to receive default 52428800", required = false)
-            @RequestParam("maxbytes") int maxbytes, 
+            @RequestParam("maxbytes") Optional<Integer> maxbytes,
             @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
             @RequestHeader(value = "Authorization") String bearer
     ) {
+
         // check if request is authorized $$TODO
         //will ask to datachannelservice if user is authorized
-        
-        String userID = "user";// + System.currentTimeMillis();
-        String companyID = "company";// + System.currentTimeMillis();
+        //String userID = "nimbleuser"; //if it will be necessary to give to each user his messages list this has to be checked with identity service; at this moment tail is organized at company level
+        String companyID = "company";
 
         if ( isNullOrEmpty(idDataChannel)  ||  isNullOrEmpty(idSensor) ) {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
@@ -64,19 +65,22 @@ public class RestConsumer  implements DataPipesDatachannelConsumerApi {
         //Configurations.CONSUMER_PROPERTIES $$set id User
         Properties consProp = (Properties) Configurations.CONSUMER_PROPERTIES.clone();
         //this enable all users in the same company to receive same messages
-        consProp.setProperty("group.id", companyID+"."+userID);
-        consProp.setProperty("client.id", companyID+"."+userID);
-        if (maxbytes == 0) maxbytes = 52428800;
-        
-        consProp.setProperty("fetch_max_bytes", maxbytes+"");////default 52428800
-        
+        //consProp.setProperty("group.id", companyID+"."+userID);
+        //consProp.setProperty("client.id", companyID+"."+userID);
+        //if two users of same company are consuming iotData this will receive them in roundrobin.
+        consProp.setProperty("client.id", companyID);
+
+        int bytes = 52428800;
+        if (maxbytes.isPresent()) bytes = maxbytes.get().intValue();
+        consProp.setProperty("fetch_max_bytes", bytes+"");
         
         kafkaConsumer = new KafkaConsumer<>(consProp);
         kafkaConsumer.subscribe(Collections.singletonList(topicName));
 
-        
-        if (maxwaitms ==0) maxwaitms=5000;
-         ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(maxwaitms);
+        int wait = 5000;
+        if (maxwaitms.isPresent()) wait = maxwaitms.get().intValue();
+
+         ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(wait);
          ResponseConsumeNextMessages messages = new ResponseConsumeNextMessages();
          consumerRecords.forEach(record -> {
             System.out.println("Record Key " + record.key());

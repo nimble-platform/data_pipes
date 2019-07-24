@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  * Created by evgeniyh on 5/9/18.
@@ -78,13 +79,18 @@ public class Helper {
     }
 
     public static Properties loadPropertiesFromResource(String resourceName) throws IOException {
-        try (InputStream is = Helper.class.getClassLoader().getResourceAsStream(resourceName)) {
-            Properties prop = new Properties();
+        //resourceName="resources/"+resourceName;
+        Properties prop = new Properties();
+        try {
+            System.out.println("loading "+ resourceName);
+            InputStream is = new ClassPathResource(resourceName).getInputStream();
+            System.out.println("loaded "+ is);
             prop.load(is);
-
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
             return prop;
         }
-    }
 
     public static String generateOutputTopicName(UUID channelId) {
         return Configurations.OUTPUT_TOPIC_PREFIX + channelId;
