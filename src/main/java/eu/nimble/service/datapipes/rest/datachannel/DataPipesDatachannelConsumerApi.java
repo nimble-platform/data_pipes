@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
                 @ApiResponse(code = 400, message = "Bad request")
             }
         )
-        @RequestMapping(value = "/getNextMessages", produces = {"application/json"}, method = RequestMethod.POST)
+        @RequestMapping(value = "/getNextMessages", produces = {"application/json"}, method = RequestMethod.GET)
         ResponseEntity<?> getNextMessages(
                                     @ApiParam(value = "idDataChannel", required = true)
                                     @RequestParam String idDataChannel,

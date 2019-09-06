@@ -46,16 +46,16 @@ public class RestProducer implements DataPipesDatachannelProducerApi {
 
     public ResponseEntity<?> sendIotData(
             @ApiParam(name = "idDataChannel", value = "", required = true)
-            @RequestParam("idDataChannel") String idDataChannel, 
+            @RequestParam("idDataChannel") String idDataChannel,
             @ApiParam(name = "idSensor", value = "", required = true)
-            @RequestParam("idSensor") String idSensor, 
+            @RequestParam("idSensor") String idSensor,
             @ApiParam(name = "datakey", value = "Primary key", required = false)
             @RequestParam("datakey") Optional<String> datakey,
             @ApiParam(name = "iotData", value = "json iot Data", required = true)
             @RequestParam("iotData") String iotData,
             @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
             @RequestHeader(value = "Authorization") String bearer
-        ) {
+    ) {
 
         // check if request is authorized $$TODO
         //will ask to datachannelservice if user is authorized
@@ -70,8 +70,8 @@ public class RestProducer implements DataPipesDatachannelProducerApi {
         prodProp.setProperty("client.id", companyID);
 
         kafkaProducer = new KafkaProducer<>(prodProp);
-        
-        
+
+
         if ( isNullOrEmpty(idDataChannel)  ||  isNullOrEmpty(idSensor)  ||  isNullOrEmpty(iotData)  ) {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
@@ -93,6 +93,57 @@ public class RestProducer implements DataPipesDatachannelProducerApi {
             logger.info(String.format("Message successfully sent,topic=%s iotData=%s", topicName, iotData));
         } catch (Exception e) {
             logger.error("Failed to send message to topic - " + topicName + " "+iotData, e);
+            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        kafkaProducer.close();
+        return new ResponseEntity(HttpStatus.OK);
+
+    }
+
+    public ResponseEntity<?> sendIotDataTest(
+            @ApiParam(name = "idDataChannel", value = "", required = true)
+            @RequestParam("idDataChannel") String idDataChannel, 
+            @ApiParam(name = "idSensor", value = "", required = true)
+            @RequestParam("idSensor") String idSensor, 
+            @ApiParam(name = "datakey", value = "Primary key", required = false)
+            @RequestParam("datakey") Optional<String> datakey,
+            @ApiParam(name = "iotData", value = "json iot Data", required = true)
+            @RequestParam("iotDataTest") String iotDataTest,
+            @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
+            @RequestHeader(value = "Authorization") String bearer
+        ) {
+
+        // check if request is authorized $$TODO
+        //will ask to datachannelservice if user is authorized
+        String companyID = "company";
+
+        //this enable all users in the same company to receive same messages
+        Properties prodProp = (Properties) Configurations.PRODUCER_PROPERTIES.clone();
+        //this would enable all users in the same company to receive same messages
+        //prodProp.setProperty("client.id", companyID+"."+userID);
+        //prodProp.setProperty("group.id", companyID+"."+userID);
+
+        prodProp.setProperty("client.id", companyID);
+
+        kafkaProducer = new KafkaProducer<>(prodProp);
+        
+        String topicName = Helper.generateInternalTopicName(idDataChannel, idSensor);
+
+        logger.info(String.format("Sending '%s' to topic '%s'", iotDataTest, topicName));
+        try {
+            String key = "";
+            if (datakey.isPresent()) key = datakey.get();
+
+            ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key, iotDataTest);
+
+            //Future<RecordMetadata> future =
+            kafkaProducer.send(record);
+
+            //RecordMetadata metadata = future.get(100, TimeUnit.MILLISECONDS);
+
+            logger.info(String.format("Message successfully sent,topic=%s iotData=%s", topicName, iotDataTest));
+        } catch (Exception e) {
+            logger.error("Failed to send message to topic - " + topicName + " "+iotDataTest, e);
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         kafkaProducer.close();
@@ -143,7 +194,7 @@ public class RestProducer implements DataPipesDatachannelProducerApi {
         String topicName = Helper.generateInternalTopicName(bulkIotDataRequest.getIdDataChannel(), bulkIotDataRequest.getIdSensor());
 
         try {
-            for (IotData iotDatum : bulkIotDataRequest.getIotData()) {
+            for (IotData iotDatum : bulkIotDataRequest.getBulkIotData()) {
 
                 if ( isNullOrEmpty(iotDatum.getDatakey())  ||  isNullOrEmpty(iotDatum.getIotData())  ) {
                     //ignore the bulk line

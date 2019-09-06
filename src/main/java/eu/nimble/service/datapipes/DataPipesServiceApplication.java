@@ -17,6 +17,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -31,6 +32,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @RestController
 @SpringBootApplication(scanBasePackages = {"eu.nimble.common.rest.identity", "eu.nimble.service.datachannel", "eu.nimble.service.datapipes"})
 @EnableSwagger2
+@CrossOrigin
+
 public class DataPipesServiceApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(DataPipesServiceApplication.class);
@@ -51,7 +54,7 @@ public class DataPipesServiceApplication {
             public void addCorsMappings(CorsRegistry registry) {
                 if (corsEnabled.equals("true")) {
                     logger.info("Enabling CORS...");
-                    registry.addMapping("/**").allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH");
+                    registry.addMapping("/**").allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS");
                 }
             }
         };

@@ -25,7 +25,7 @@ nimble:
     exclude:
     - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
     - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-  corsEnabled: false
+  corsEnabled: true
   data-pipes:
     env:  ${DATA_PIPES_ENVIRONMENT}
     message-hub-credentials:  ${MESSAGE_HUB_CREDENTIALS}

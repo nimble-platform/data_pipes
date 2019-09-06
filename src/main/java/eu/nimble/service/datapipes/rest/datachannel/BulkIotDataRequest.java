@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class BulkIotDataRequest {
     private String idDataChannel;
     private String idSensor;
-    private ArrayList<IotData> iotData;
+    private ArrayList<IotData> bulkIotData;
 
 
     public String getIdDataChannel() {
@@ -24,11 +24,11 @@ public class BulkIotDataRequest {
         this.idSensor = idSensor;
     }
 
-    public ArrayList<IotData> getIotData() {
-        return iotData;
+    public ArrayList<IotData> getBulkIotData() {
+        return bulkIotData;
     }
 
-    public void setIotData(ArrayList<IotData> iotData) {
-        this.iotData = iotData;
+    public void setBulkIotData(ArrayList<IotData> bulkIotData) {
+        this.bulkIotData = bulkIotData;
     }
 }
