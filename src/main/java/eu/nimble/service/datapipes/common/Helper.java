@@ -97,7 +97,11 @@ public class Helper {
     }
 
     public static String generateInternalTopicName(String idDataChannel, String idSensor) {
-        return Configurations.INTERNAL_TOPIC_PREFIX.toUpperCase()+"_" + idDataChannel.replace('-','_')+"_" + idSensor; //changed because of https://github.com/confluentinc/ksql/issues/1466#
+        String itn = Configurations.INTERNAL_TOPIC_PREFIX.toUpperCase()+"_" + idDataChannel.replace('-','_'); //changed because of https://github.com/confluentinc/ksql/issues/1466#
+        if (idSensor!= null && !"".equals(idSensor)) {
+            itn += "_" + idSensor;
+        }
+        return itn;
     }
 
     public static void updateJaasConfiguration(String username, String password) throws IOException {

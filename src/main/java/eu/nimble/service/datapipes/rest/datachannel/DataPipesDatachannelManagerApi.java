@@ -46,4 +46,19 @@ import org.springframework.web.bind.annotation.*;
                                     @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
                                     @RequestHeader(value = "Authorization") String bearer)
          throws IOException, UnirestException;
+
+        @ApiOperation(value = "Start new channel", notes = "Start new channel")
+        @ApiResponses(value = {
+                @ApiResponse(code = 200, message = "Start new channel", response = CreateChannelResponse.class),
+                @ApiResponse(code = 400, message = "Bad request")
+        }
+        )
+        @RequestMapping(value = "/createInternalChannelTopic", produces = {"application/json"}, method = RequestMethod.POST)
+        ResponseEntity<?> createInternalChannelTopic(
+                @ApiParam(value = "idDataChannel", required = true)
+                @RequestParam String idDataChannel,
+                @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
+                @RequestHeader(value = "Authorization") String bearer)
+                throws IOException, UnirestException;
+
     }

@@ -82,22 +82,22 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
         }
     }
 
-    
+
     public ResponseEntity<?> createInternalSensorTopic(
-                @ApiParam(value = "idDataChannel", required = true) @RequestParam String idDataChannel,
-                @ApiParam(value = "idSensor", required = true) @RequestParam String idSensor,
-                @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
-                @RequestHeader(value = "Authorization") String bearer
+            @ApiParam(value = "idDataChannel", required = true) @RequestParam String idDataChannel,
+            @ApiParam(value = "idSensor", required = true) @RequestParam String idSensor,
+            @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
+            @RequestHeader(value = "Authorization") String bearer
     ) {
         try {
-            
-            
-        // check if request is authorized $$TODO
-        //will ask to datachannelservice if user is authorized to work on this channel and sensor
-            
+
+
+            // check if request is authorized $$TODO
+            //will ask to datachannelservice if user is authorized to work on this channel and sensor
+
 
             if ( isNullOrEmpty(idDataChannel)  ||  isNullOrEmpty(idSensor)  ) {
-                    return new ResponseEntity(HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(HttpStatus.BAD_REQUEST);
             }
 
             logger.info(String.format("Received POST command on createInternalDataChannel with params idDatachannel=%s, idSensor=%s ", idDataChannel, idSensor));
@@ -107,7 +107,7 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
             logger.info("Starting new internal topic - " + topicName);
 
             KafkaHelper.createNewTopic(topicName);
-            
+
             CreateChannelResponse response = new CreateChannelResponse();
             response.setChannelId( topicName );
             response.setInputTopic(topicName);
@@ -116,12 +116,44 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
 
         } catch (Exception e) {
             logger.error("Error during start of a new internal channel", e);
-                    return new ResponseEntity(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
     }
 
-    
-    
+    public ResponseEntity<?> createInternalChannelTopic(
+            @ApiParam(value = "idDataChannel", required = true) @RequestParam String idDataChannel,
+            @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
+            @RequestHeader(value = "Authorization") String bearer
+    ) {
+        try {
+
+
+            // check if request is authorized $$TODO
+            //will ask to datachannelservice if user is authorized to work on this channel and sensor
+
+
+            logger.info(String.format("Received POST command on createInternalChannelTopic with params idDatachannel=%s ", idDataChannel));
+
+
+            String topicName = Helper.generateInternalTopicName(idDataChannel, null);
+            logger.info("Starting new internal topic - " + topicName);
+
+            KafkaHelper.createNewTopic(topicName);
+
+            CreateChannelResponse response = new CreateChannelResponse();
+            response.setChannelId( topicName );
+            response.setInputTopic(topicName);
+            response.setOutputTopic(topicName);
+            return new ResponseEntity(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            logger.error("Error during start of a new internal channel", e);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+
     private class StartChannelConfig {
         private final String source;
         private final String target;
