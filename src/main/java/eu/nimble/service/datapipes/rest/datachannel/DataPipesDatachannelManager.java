@@ -7,6 +7,7 @@ import eu.nimble.service.datapipes.common.Helper;
 import eu.nimble.service.datapipes.kafka.KafkaHelper;
 import io.swagger.annotations.Api;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import io.swagger.annotations.*;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +27,14 @@ import org.springframework.http.HttpStatus;
 
 @Controller
 @RequestMapping(path = "/manage")
-@Api("Data Pipes service manager API")
+@Api("Data Pipes service manager API - Authorization is datachannelapikey env variable")
 public class DataPipesDatachannelManager implements DataPipesDatachannelManagerApi {
     private static final Logger logger = Logger.getLogger(DataPipesDatachannelManager.class);
     private Gson gson = new Gson();
+
+    @Value("${nimble.internaldatachannel.datachannelapikey}")
+    private String datachannelapikey;
+
 
     public ResponseEntity<?> startNewChannel(
                 @ApiParam(value = "configs", required = true) @RequestParam String configs,
@@ -37,7 +42,7 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
                 @ApiParam(value = "target", required = true) @RequestParam String target,
                 @ApiParam(value = "jsonFilter", required = true) @RequestParam String jsonFilter,
                 @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
-                @RequestHeader(value = "Authorization") String bearer
+                @RequestHeader(value = "Authorization") String datachannelapikey
     )
    {
         try {
@@ -87,13 +92,15 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
             @ApiParam(value = "idDataChannel", required = true) @RequestParam String idDataChannel,
             @ApiParam(value = "idSensor", required = true) @RequestParam String idSensor,
             @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
-            @RequestHeader(value = "Authorization") String bearer
+            @RequestHeader(value = "Authorization") String datachannelapikey
     ) {
         try {
 
 
-            // check if request is authorized $$TODO
-            //will ask to datachannelservice if user is authorized to work on this channel and sensor
+            // check if request is authorized
+            if (!this.datachannelapikey.equals(datachannelapikey)) {
+                return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+            }
 
 
             if ( isNullOrEmpty(idDataChannel)  ||  isNullOrEmpty(idSensor)  ) {
@@ -123,13 +130,15 @@ public class DataPipesDatachannelManager implements DataPipesDatachannelManagerA
     public ResponseEntity<?> createInternalChannelTopic(
             @ApiParam(value = "idDataChannel", required = true) @RequestParam String idDataChannel,
             @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
-            @RequestHeader(value = "Authorization") String bearer
+            @RequestHeader(value = "Authorization") String datachannelapikey
     ) {
         try {
 
 
-            // check if request is authorized $$TODO
-            //will ask to datachannelservice if user is authorized to work on this channel and sensor
+            // check if request is authorized
+            if (!this.datachannelapikey.equals(datachannelapikey)) {
+                return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+            }
 
 
             logger.info(String.format("Received POST command on createInternalChannelTopic with params idDatachannel=%s ", idDataChannel));
