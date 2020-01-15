@@ -32,4 +32,18 @@ import org.springframework.web.bind.annotation.*;
                                     @RequestHeader(value = "Authorization") String bearer)
          throws IOException, UnirestException;
 
+        @RequestMapping(value = "/getFilteredMessages", produces = {"application/json"}, method = RequestMethod.GET)
+        public ResponseEntity<?> getFilteredMessages(
+                @ApiParam(name = "idDataChannel", value = "", required = true)
+                @RequestParam("idDataChannel") String idDataChannel,
+                @ApiParam(name = "idSensor", value = "", required = true)
+                @RequestParam("idSensor") String idSensor,
+                @ApiParam(name = "filterField", value = "field name of filter", required = true)
+                @RequestParam("filterField") String filterField,
+                @ApiParam(name = "filterValue", value = "simple filter to be applied server side", required = true)
+                @RequestParam("filterValue") String filterValue,
+                @ApiParam(name = "Authorization", value = "OpenID Connect token containing identity of requester", required = true)
+                @RequestHeader(value = "Authorization") String bearer )
+                throws IOException, UnirestException;
+
     }

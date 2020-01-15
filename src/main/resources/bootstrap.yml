@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8889}
+  port: ${PORT:18889}
   tomcat:
     max-threads: 3
 spring:
@@ -8,7 +8,7 @@ spring:
     name: internaldatachannel
   cloud:
     config:
-      uri: ${CONFIG_SERVER_URI:http://localhost:8889}
+      uri: ${CONFIG_SERVER_URI:http://localhost:18899}
       # failFast is disabled per default, so that the service can start standalone without config server.
       # failFast should be enabled in production environments.
       # it can be set via an environment variable or the config server failFast: ${CONFIG_SERVER_FAILFAST:false}
@@ -30,11 +30,10 @@ nimble:
     env:  ${DATA_PIPES_ENVIRONMENT}
     message-hub-credentials:  ${MESSAGE_HUB_CREDENTIALS}
     identity:
-      identity-url: ${IDENTITY_SERVICE_URL:http://161.156.70.122/identity}
+      identity-url: ${IDENTITY_SERVICE_URL:https://nimble-platform.salzburgresearch.at/nimble/identity}
     datachannel:
-      datachannel-url: ${DATACHANNEL_URL:http://161.156.70.122/datachannel}
+      datachannel-url: ${DATACHANNEL_URL:http://nimblewg.holonix.biz:19099/channel/}
       datachannelapikey: ${DATACHANNELAPIKEY:nimbledatachannelapikey}
-
 
 logging:
   level:

@@ -17,6 +17,8 @@ This service is going to be integrated with SSO in Nimble (Identity Service) and
 
 Optionally can be enabled database persistence and filtering for production side in properties file for configuration (both disabled on default in this release code).
 
+Whitegoods Swagger can be found at
+http://nimblewg.holonix.biz:18889/swagger-ui.html#/rest-consumer
 
  ---
 The project leading to this application has received funding from the European Union Horizon 2020 research and innovation programme under grant agreement No 723810.
